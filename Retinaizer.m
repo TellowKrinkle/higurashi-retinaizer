@@ -115,6 +115,7 @@ static void initializeUnity() {
 /// Modifies the function pointed to by `oldFunction` to immediately jump to `newFunction`
 static void replaceFunction(void *oldFunction, void *newFunction) {
 	// From http://thomasfinch.me/blog/2015/07/24/Hooking-C-Functions-At-Runtime.html
+	// Note: dlsym doesn't work on non-exported symbols which is why we're not using it
 	ssize_t offset = ((ssize_t)newFunction - ((ssize_t)oldFunction + 5));
 
 	// Make the memory containing the original funcion writable
