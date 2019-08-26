@@ -38,8 +38,6 @@ static const struct WantedFunction {
 	{"__Z15GetInputManagerv", &unityMethods.GetInputManager},
 };
 
-static int isRetina = 0;
-
 # pragma mark - Symbol loading and replacement
 
 /// Search through the given symbol list to find pointers to functions
@@ -151,7 +149,6 @@ void goRetina() {
 				continue;
 			}
 			[view setWantsBestResolutionOpenGLSurface:YES];
-			isRetina = 1;
 			object_setClass(window, [WindowFakeSizer class]);
 		}
 	});
