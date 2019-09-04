@@ -17,12 +17,15 @@ typedef struct Pointf {
 	float y;
 } Pointf;
 
-static struct UnityMethods {
+static struct MethodsToReplace {
 	void (*InputReadMousePosition)(void);
+	Pointf (*ScreenMgrGetMouseOrigin)(void *);
+} methodsToReplace = {0};
+
+static struct UnityMethods {
 	void *(*GetScreenManager)(void);
 	void *(*GetInputManager)(void);
 	CGDirectDisplayID (*ScreenMgrGetDisplayID)(void *);
-	Pointf (*ScreenMgrGetMouseOrigin)(void *);
 	Pointf (*ScreenMgrGetMouseScale)(void *);
 } unityMethods = {0};
 
@@ -30,11 +33,11 @@ static const struct WantedFunction {
 	char *name;
 	void *target;
 } wantedFunctions[] = {
-	{"__Z22InputReadMousePositionv", &unityMethods.InputReadMousePosition},
+	{"__Z22InputReadMousePositionv", &methodsToReplace.InputReadMousePosition},
+	{"__ZN26ScreenManagerOSXStandalone14GetMouseOriginEv", &methodsToReplace.ScreenMgrGetMouseOrigin},
 	{"__Z16GetScreenManagerv", &unityMethods.GetScreenManager},
 	{"__ZNK16ScreenManagerOSX12GetDisplayIDEv", &unityMethods.ScreenMgrGetDisplayID},
 	{"__ZN26ScreenManagerOSXStandalone13GetMouseScaleEv", &unityMethods.ScreenMgrGetMouseScale},
-	{"__ZN26ScreenManagerOSXStandalone14GetMouseOriginEv", &unityMethods.ScreenMgrGetMouseOrigin},
 	{"__Z15GetInputManagerv", &unityMethods.GetInputManager},
 };
 
@@ -142,8 +145,8 @@ static void ReadMousePosReplacement(void);
 void goRetina() {
 	initializeUnity();
 	dispatch_async(dispatch_get_main_queue(), ^{
-		replaceFunction(unityMethods.ScreenMgrGetMouseOrigin, GetMouseOriginReplacement);
-		replaceFunction(unityMethods.InputReadMousePosition, ReadMousePosReplacement);
+		replaceFunction(methodsToReplace.ScreenMgrGetMouseOrigin, GetMouseOriginReplacement);
+		replaceFunction(methodsToReplace.InputReadMousePosition, ReadMousePosReplacement);
 		NSApplication *app = [NSApplication sharedApplication];
 		for (NSWindow *window in [app orderedWindows]) {
 			NSView *view = [window contentView];
