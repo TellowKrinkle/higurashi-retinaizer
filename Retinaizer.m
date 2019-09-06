@@ -5,15 +5,18 @@
 #import <Cocoa/Cocoa.h>
 #include "Retinaizer.h"
 #include "Replacements.h"
+#include <dlfcn.h>
 
 #pragma mark - Structs
 
 static struct MethodsToReplace {
 	void (*InputReadMousePosition)(void);
 	Pointf (*ScreenMgrGetMouseOrigin)(void *);
+	bool (*ScreenMgrSetResImmediate)(void *, int, int, bool, int);
 } methodsToReplace = {0};
 
 struct UnityMethods unityMethods = {0};
+struct CPPMethods cppMethods = {0};
 
 static const struct WantedFunction {
 	char *name;
@@ -21,10 +24,37 @@ static const struct WantedFunction {
 } wantedFunctions[] = {
 	{"__Z22InputReadMousePositionv", &methodsToReplace.InputReadMousePosition},
 	{"__ZN26ScreenManagerOSXStandalone14GetMouseOriginEv", &methodsToReplace.ScreenMgrGetMouseOrigin},
+	{"__ZN26ScreenManagerOSXStandalone22SetResolutionImmediateEiibi", &methodsToReplace.ScreenMgrSetResImmediate},
+
 	{"__Z16GetScreenManagerv", &unityMethods.GetScreenManager},
+	{"__Z12GetGfxDevicev", &unityMethods.GetGfxDevice},
+	{"__Z15GetInputManagerv", &unityMethods.GetInputManager},
+	{"__Z18GetQualitySettingsv", &unityMethods.GetQualitySettings},
+	{"__Z23GetRequestedDeviceLevelv", &unityMethods.GetRequestedDeviceLevel},
+	{"__Z11IsBatchmodev", &unityMethods.IsBatchMode},
+	{"__Z37MustSwitchResolutionForFullscreenModev", &unityMethods.MustSwitchResolutionForFullscreenMode},
+
+	{"__Z12SetSyncToVBL12ObjectHandleI19GraphicsContext_TagPvEi", &unityMethods.SetSyncToVBL},
+	{"__ZN11PlayerPrefs6SetIntERKSsi", &unityMethods.PlayerPrefsSetInt},
+
+	{"__Z14MakeNewContext16GfxDeviceLevelGLiiibb17DepthBufferFormatPib", &unityMethods.MakeNewContext},
+	{"__ZN13RenderTexture10ReleaseAllEv", &unityMethods.RenderTextureReleaseAll},
+	{"__Z20DestroyMainContextGLv", &unityMethods.DestroyMainContextGL},
+
 	{"__ZNK16ScreenManagerOSX12GetDisplayIDEv", &unityMethods.ScreenMgrGetDisplayID},
 	{"__ZN26ScreenManagerOSXStandalone13GetMouseScaleEv", &unityMethods.ScreenMgrGetMouseScale},
-	{"__Z15GetInputManagerv", &unityMethods.GetInputManager},
+	{"__ZN16ScreenManagerOSX14WillChangeModeERSt6vectorIiSaIiEE", &unityMethods.ScreenMgrWillChangeMode},
+	{"__ZN16ScreenManagerOSX31SetFullscreenResolutionRobustlyERiS0_ib12ObjectHandleI19GraphicsContext_TagPvE", &unityMethods.ScreenMgrSetFullscreenResolutionRobustly},
+	{"__ZN26ScreenManagerOSXStandalone19CreateAndShowWindowEiib", &unityMethods.ScreenMgrCreateAndShowWindow},
+	{"__ZN16ScreenManagerOSX19DidChangeScreenModeEiii12ObjectHandleI19GraphicsContext_TagPvERSt6vectorIiSaIiEE", &unityMethods.ScreenMgrDidChangeScreenMode},
+	{"__ZN26ScreenManagerOSXStandalone28SetupDownscaledFullscreenFBOEii", &unityMethods.ScreenMgrSetupDownscaledFullscreenFBO},
+
+	{"_gDefaultFBOGL", &unityMethods.gDefaultFBOGL},
+
+	{"__ZNSsC1EPKcRKSaIcE", &cppMethods.MakeStdString},
+	{"__ZNSs4_Rep20_S_empty_rep_storageE", &cppMethods.stdStringEmptyRepStorage},
+	{"__ZNSs4_Rep10_M_destroyERKSaIcE", &cppMethods.DestroyStdStringRep},
+	{"__ZdlPv", &cppMethods.operatorDelete},
 };
 
 # pragma mark - Symbol loading and replacement
@@ -99,6 +129,17 @@ static void initializeUnity() {
 			free(buf);
 		}
 	}
+
+	// Symbols from outside the binary (e.g. libc++) won't get found by the above code but must be public so we can get them this way
+	void *dl = dlopen(NULL, RTLD_NOW);
+	for (int i = 0; i < sizeof(wantedFunctions) / sizeof(*wantedFunctions); i++) {
+		struct WantedFunction fn = wantedFunctions[i];
+		if (*(void **)fn.target == NULL) {
+			// Skip the initial `_` when using with dlsym
+			*(void **)fn.target = dlsym(dl, fn.name + 1);
+		}
+	}
+	dlclose(dl);
 }
 
 /// Modifies the function pointed to by `oldFunction` to immediately jump to `newFunction`
@@ -128,6 +169,7 @@ void goRetina() {
 	dispatch_async(dispatch_get_main_queue(), ^{
 		replaceFunction(methodsToReplace.ScreenMgrGetMouseOrigin, GetMouseOriginReplacement);
 		replaceFunction(methodsToReplace.InputReadMousePosition, ReadMousePosReplacement);
+		replaceFunction(methodsToReplace.ScreenMgrSetResImmediate, SetResImmediateReplacement);
 		NSApplication *app = [NSApplication sharedApplication];
 		for (NSWindow *window in [app orderedWindows]) {
 			NSView *view = [window contentView];
