@@ -3,31 +3,17 @@
 #import <mach-o/nlist.h>
 #import <mach-o/fat.h>
 #import <Cocoa/Cocoa.h>
+#include "Retinaizer.h"
+#include "Replacements.h"
 
 #pragma mark - Structs
-
-@interface WindowFakeSizer : NSWindow
-
-- (NSRect)actualContentRectForFrameRect:(NSRect)frameRect;
-
-@end
-
-typedef struct Pointf {
-	float x;
-	float y;
-} Pointf;
 
 static struct MethodsToReplace {
 	void (*InputReadMousePosition)(void);
 	Pointf (*ScreenMgrGetMouseOrigin)(void *);
 } methodsToReplace = {0};
 
-static struct UnityMethods {
-	void *(*GetScreenManager)(void);
-	void *(*GetInputManager)(void);
-	CGDirectDisplayID (*ScreenMgrGetDisplayID)(void *);
-	Pointf (*ScreenMgrGetMouseScale)(void *);
-} unityMethods = {0};
+struct UnityMethods unityMethods = {0};
 
 static const struct WantedFunction {
 	char *name;
@@ -137,11 +123,6 @@ static void replaceFunction(void *oldFunction, void *newFunction) {
 	mprotect((void *)pageStart, end - pageStart, PROT_READ | PROT_EXEC);
 }
 
-# pragma mark - Replacement Functions
-
-static Pointf GetMouseOriginReplacement(void *mgr);
-static void ReadMousePosReplacement(void);
-
 void goRetina() {
 	initializeUnity();
 	dispatch_async(dispatch_get_main_queue(), ^{
@@ -168,59 +149,3 @@ void goRetina() {
 	return [self convertRectToBacking:[super contentRectForFrameRect:frameRect]];
 }
 @end
-
-static void *getVtableEntry(void *object, size_t offset) {
-	void **vtable = *(void **)object;
-	return *(vtable + offset / sizeof(void *));
-}
-
-static void *getField(void *object, size_t offset) {
-	return (char *)object + offset;
-}
-
-static Pointf GetMouseOriginReplacement(void *mgr) {
-	void *windowPtr = *(void **)getField(mgr, 0x70);
-	if (windowPtr) {
-		WindowFakeSizer *window = (__bridge WindowFakeSizer*)windowPtr;
-		CGRect contentRect = [window actualContentRectForFrameRect:[window frame]];
-		NSScreen *screen = [[NSScreen screens] objectAtIndex:0];
-		double height = 0;
-		if (screen) {
-			height = [screen frame].size.height;
-		}
-		Pointf ret = (Pointf){contentRect.origin.x, height - contentRect.origin.y - contentRect.size.height};
-		return ret;
-	}
-	else {
-		return (Pointf){0, 0};
-	}
-}
-
-static void ReadMousePosReplacement() {
-	CGEventRef event = CGEventCreate(NULL);
-	CGPoint point = CGEventGetLocation(event);
-	CFRelease(event);
-
-	void *screenMgr = unityMethods.GetScreenManager();
-	char(*isFullscreenMethod)(void *) = getVtableEntry(screenMgr, 0xb8);
-	CGPoint origin;
-	if (isFullscreenMethod(screenMgr)) {
-		CGDirectDisplayID displayID = unityMethods.ScreenMgrGetDisplayID(screenMgr);
-		origin = CGDisplayBounds(displayID).origin;
-	}
-	else {
-		Pointf pt = GetMouseOriginReplacement(screenMgr);
-		origin = (CGPoint){ pt.x, pt.y };
-	}
-	int (*getHeightMethod)(void *) = getVtableEntry(screenMgr, 0xa8);
-	int screenHeight = getHeightMethod(screenMgr);
-	NSPoint windowRelative = { point.x - origin.x, point.y - origin.y };
-	void *windowPtr = *(void **)getField(screenMgr, 0x70);
-	if (windowPtr) {
-		WindowFakeSizer *window = (__bridge WindowFakeSizer*)windowPtr;
-		windowRelative = [window convertRectToBacking:(NSRect){windowRelative, NSZeroSize}].origin;
-	}
-	void *inputManager = unityMethods.GetInputManager();
-	Pointf *output = getField(inputManager, 0xb0);
-	*output = (Pointf){ windowRelative.x, screenHeight - windowRelative.y };
-}
