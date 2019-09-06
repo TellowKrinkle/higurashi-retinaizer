@@ -218,7 +218,7 @@ static void ReadMousePosReplacement() {
 	void *windowPtr = *(void **)getField(screenMgr, 0x70);
 	if (windowPtr) {
 		WindowFakeSizer *window = (__bridge WindowFakeSizer*)windowPtr;
-		windowRelative = [window convertPointToBacking:windowRelative];
+		windowRelative = [window convertRectToBacking:(NSRect){windowRelative, NSZeroSize}].origin;
 	}
 	void *inputManager = unityMethods.GetInputManager();
 	Pointf *output = getField(inputManager, 0xb0);
