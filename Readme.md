@@ -3,7 +3,7 @@
 Enables retina display support for Higurashi games on macOS
 
 ## Compiling
-Compile with `clang -mmacosx-version-min=10.7 -shared -O3 -framework Cocoa -framework OpenGL Retinaizer.m Replacements.m -o libRetinaizer.dylib`
+Compile with `clang -mmacosx-version-min=10.7 -shared -O3 -framework Cocoa -framework OpenGL -framework Carbon Retinaizer.m Replacements.m -o libRetinaizer.dylib`
 
 ## Installation
 Copy the compiled `libRetinaizer.dylib` to `HigurashiGame.app/Contents/Frameworks/MonoEmbedRuntime/osx/`.  You will need a version of `Assembly-CSharp.dll` that has [this commit](https://github.com/07th-mod/higurashi-assembly/commit/0f625a5bcebdb07674531b92eb68f8d16a9bc14f) in it.

@@ -13,6 +13,7 @@ static struct MethodsToReplace {
 	void (*InputReadMousePosition)(void);
 	Pointf (*ScreenMgrGetMouseOrigin)(void *);
 	bool (*ScreenMgrSetResImmediate)(void *, int, int, bool, int);
+	void (*ScreenMgrCreateAndShowWindow)(void *, int, int, bool);
 } methodsToReplace = {0};
 
 struct UnityMethods unityMethods = {0};
@@ -25,14 +26,17 @@ static const struct WantedFunction {
 	{"__Z22InputReadMousePositionv", &methodsToReplace.InputReadMousePosition},
 	{"__ZN26ScreenManagerOSXStandalone14GetMouseOriginEv", &methodsToReplace.ScreenMgrGetMouseOrigin},
 	{"__ZN26ScreenManagerOSXStandalone22SetResolutionImmediateEiibi", &methodsToReplace.ScreenMgrSetResImmediate},
+	{"__ZN26ScreenManagerOSXStandalone19CreateAndShowWindowEiib", &methodsToReplace.ScreenMgrCreateAndShowWindow},
 
 	{"__Z16GetScreenManagerv", &unityMethods.GetScreenManager},
 	{"__Z12GetGfxDevicev", &unityMethods.GetGfxDevice},
 	{"__Z15GetInputManagerv", &unityMethods.GetInputManager},
 	{"__Z18GetQualitySettingsv", &unityMethods.GetQualitySettings},
+	{"__Z17GetPlayerSettingsv", &unityMethods.GetPlayerSettings},
 	{"__Z23GetRequestedDeviceLevelv", &unityMethods.GetRequestedDeviceLevel},
 	{"__Z11IsBatchmodev", &unityMethods.IsBatchMode},
 	{"__Z37MustSwitchResolutionForFullscreenModev", &unityMethods.MustSwitchResolutionForFullscreenMode},
+	{"__Z21AllowResizeableWindowv", &unityMethods.AllowResizableWindow},
 
 	{"__Z12SetSyncToVBL12ObjectHandleI19GraphicsContext_TagPvEi", &unityMethods.SetSyncToVBL},
 	{"__ZN11PlayerPrefs6SetIntERKSsi", &unityMethods.PlayerPrefsSetInt},
@@ -45,11 +49,11 @@ static const struct WantedFunction {
 	{"__ZN26ScreenManagerOSXStandalone13GetMouseScaleEv", &unityMethods.ScreenMgrGetMouseScale},
 	{"__ZN16ScreenManagerOSX14WillChangeModeERSt6vectorIiSaIiEE", &unityMethods.ScreenMgrWillChangeMode},
 	{"__ZN16ScreenManagerOSX31SetFullscreenResolutionRobustlyERiS0_ib12ObjectHandleI19GraphicsContext_TagPvE", &unityMethods.ScreenMgrSetFullscreenResolutionRobustly},
-	{"__ZN26ScreenManagerOSXStandalone19CreateAndShowWindowEiib", &unityMethods.ScreenMgrCreateAndShowWindow},
 	{"__ZN16ScreenManagerOSX19DidChangeScreenModeEiii12ObjectHandleI19GraphicsContext_TagPvERSt6vectorIiSaIiEE", &unityMethods.ScreenMgrDidChangeScreenMode},
 	{"__ZN26ScreenManagerOSXStandalone28SetupDownscaledFullscreenFBOEii", &unityMethods.ScreenMgrSetupDownscaledFullscreenFBO},
 
 	{"_gDefaultFBOGL", &unityMethods.gDefaultFBOGL},
+	{"_g_PopUpWindow", &unityMethods.gPopUpWindow},
 
 	{"__ZNSsC1EPKcRKSaIcE", &cppMethods.MakeStdString},
 	{"__ZNSs4_Rep20_S_empty_rep_storageE", &cppMethods.stdStringEmptyRepStorage},
@@ -170,6 +174,7 @@ void goRetina() {
 		replaceFunction(methodsToReplace.ScreenMgrGetMouseOrigin, GetMouseOriginReplacement);
 		replaceFunction(methodsToReplace.InputReadMousePosition, ReadMousePosReplacement);
 		replaceFunction(methodsToReplace.ScreenMgrSetResImmediate, SetResImmediateReplacement);
+		replaceFunction(methodsToReplace.ScreenMgrCreateAndShowWindow, CreateAndShowWindowReplacement);
 		NSApplication *app = [NSApplication sharedApplication];
 		for (NSWindow *window in [app orderedWindows]) {
 			NSView *view = [window contentView];

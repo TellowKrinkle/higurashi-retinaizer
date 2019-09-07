@@ -26,9 +26,11 @@ extern struct UnityMethods {
 	void *(*GetInputManager)(void);
 	void *(*GetGfxDevice)(void);
 	void *(*GetQualitySettings)(void);
+	void *(*GetPlayerSettings)(void);
 	uint32_t (*GetRequestedDeviceLevel)(void);
 	bool (*IsBatchMode)(void);
 	bool (*MustSwitchResolutionForFullscreenMode)(void);
+	bool (*AllowResizableWindow)(void);
 
 	void (*SetSyncToVBL)(void *, int);
 	void (*PlayerPrefsSetInt)(StdString *, int);
@@ -41,11 +43,11 @@ extern struct UnityMethods {
 	Pointf (*ScreenMgrGetMouseScale)(void *);
 	void (*ScreenMgrWillChangeMode)(void *, IntVector *);
 	void (*ScreenMgrSetFullscreenResolutionRobustly)(void *, int *, int *, int, bool, void *);
-	void (*ScreenMgrCreateAndShowWindow)(void *, int, int, bool);
 	void (*ScreenMgrDidChangeScreenMode)(void *, int, int, int, void *, IntVector *);
 	void (*ScreenMgrSetupDownscaledFullscreenFBO)(void *, int, int);
 
 	int *gDefaultFBOGL;
+	bool *gPopUpWindow;
 } unityMethods;
 
 extern struct CPPMethods {

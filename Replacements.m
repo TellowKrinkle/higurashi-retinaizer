@@ -1,5 +1,6 @@
 #include "Replacements.h"
 #include <OpenGL/glext.h>
+#include <Carbon/Carbon.h>
 
 #pragma mark - Helpers
 
@@ -27,8 +28,18 @@ static void destroyStdString(StdString str) {
 	}
 }
 
+static NSScreen *screenForID(CGDirectDisplayID display) {
+	for (NSScreen *screen in [NSScreen screens]) {
+		if (display == [[[screen deviceDescription] objectForKey:@"NSScreenNumber"] intValue]) {
+			return screen;
+		}
+	}
+	return nil;
+}
+
 enum ScreenMgrOffsets {
 	ScreenMgrWindowOffset = 0x70,
+	PlayerWindowViewOffset = 0x78,
 };
 
 #pragma mark - Replacement Functions
@@ -110,8 +121,8 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 			unityMethods.ScreenMgrSetFullscreenResolutionRobustly(mgr, &width, &height, fullscreen, false, context);
 		}
 		else {
-			unityMethods.ScreenMgrCreateAndShowWindow(mgr, width, height, fullscreen);
-			PlayerWindowView *view = (__bridge PlayerWindowView *)*(void **)getField(mgr, 0x78);
+			CreateAndShowWindowReplacement(mgr, width, height, fullscreen);
+			PlayerWindowView *view = (__bridge PlayerWindowView *)*(void **)getField(mgr, PlayerWindowViewOffset);
 			[view setContext:*(CGLContextObj *)context];
 			if (!fullscreen) {
 				if (window) {
@@ -155,3 +166,88 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 	}
 	return ret;
 };
+
+static void newWindowOrigin(NSWindow *window, CGRect frame, CGRect displayBounds) {
+	double x = (displayBounds.size.width - frame.size.width)/2 + displayBounds.origin.x;
+	double y = displayBounds.size.height - frame.size.height;
+	if (y > 60) {
+		y -= 50;
+	}
+	[window setFrameOrigin:(NSPoint){x, y}];
+}
+
+// Recenter window the first time this runs since the previous position was probably based on the wrong size
+static bool hasRunModdedCreateWindow = false;
+
+void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fullscreen) {
+	void *otherMgr = unityMethods.GetScreenManager();
+	CGDirectDisplayID display = unityMethods.ScreenMgrGetDisplayID(otherMgr);
+	NSScreen *screen = screenForID(display);
+	CGRect displayBounds = CGDisplayBounds(display);
+	CGRect bounds = (CGRect){CGPointZero, {width, height}};
+	if (screen) {
+		bounds = [screen convertRectFromBacking:bounds];
+	}
+	WindowFakeSizer *window = (__bridge WindowFakeSizer *)*(void **)getField(mgr, ScreenMgrWindowOffset);
+	if (!window) {
+		bool resizable = unityMethods.AllowResizableWindow();
+		NSWindowStyleMask style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable;
+		if (resizable) {
+			style |= NSWindowStyleMaskResizable;
+		}
+		window = [[WindowFakeSizer alloc] initWithContentRect:bounds styleMask:style backing:NSBackingStoreBuffered defer:YES];
+		*(void **)getField(mgr, ScreenMgrWindowOffset) = (void *)CFBridgingRetain(window);
+		[window setAcceptsMouseMovedEvents:YES];
+		id windowDelegate = [NSClassFromString(@"PlayerWindowDelegate") alloc];
+		[window setDelegate:windowDelegate];
+		[window setBackgroundColor:[NSColor blackColor]];
+		if (*unityMethods.gPopUpWindow) {
+			[window setStyleMask:resizable ? NSWindowStyleMaskResizable : 0];
+		}
+		PlayerWindowView *view = [[NSClassFromString(@"PlayerWindowView") alloc] initWithFrame:bounds];
+		*(void **)getField(mgr, PlayerWindowViewOffset) = (void *)CFBridgingRetain(view);
+		[window setContentView:view];
+		[window makeFirstResponder:view];
+		newWindowOrigin(window, [window frame], displayBounds);
+		[window useOptimizedDrawing:YES];
+		NSDictionary<NSString *, id> *dic = [[NSBundle mainBundle] infoDictionary];
+		NSString *name = [dic objectForKey:@"CFBundleName"];
+		if (!name) {
+			name = @"Unity Player";
+		}
+		[window setTitle:name];
+		[window makeKeyAndOrderFront:NULL];
+	}
+	if (!fullscreen) {
+		CGRect contentRect = [window actualContentRectForFrameRect:[window frame]];
+		if (contentRect.size.width != bounds.size.width || contentRect.size.height != bounds.size.height) {
+			contentRect.origin.y -= (bounds.size.height - contentRect.size.height);
+		}
+		CGRect newFrame = [window frameRectForContentRect:(NSRect){contentRect.origin, bounds.size}];
+		if (hasRunModdedCreateWindow) {
+			[window setFrame:newFrame display:YES animate:YES];
+		}
+		else {
+			hasRunModdedCreateWindow = true;
+			[window setFrame:newFrame display:YES];
+			newWindowOrigin(window, newFrame, displayBounds);
+		}
+	}
+	int *flag = getField(unityMethods.GetPlayerSettings(), 0xd4);
+	if (*flag == 2) {
+		[window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
+	}
+	else {
+		[window setCollectionBehavior:fullscreen ? NSWindowCollectionBehaviorFullScreenPrimary : NSWindowCollectionBehaviorDefault];
+		if (fullscreen) {
+			SetSystemUIMode(kUIModeAllHidden, 0);
+			[NSApp setPresentationOptions:NSApplicationPresentationHideDock | NSApplicationPresentationHideMenuBar | NSApplicationPresentationDisableProcessSwitching];
+		}
+		else {
+			SetSystemUIMode(kUIModeNormal, kUIOptionAutoShowMenuBar);
+		}
+		if ((([window styleMask] & NSWindowStyleMaskFullScreen) != 0) != fullscreen) {
+			[window toggleFullScreen:NULL];
+		}
+	}
+}

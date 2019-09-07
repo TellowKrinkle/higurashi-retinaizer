@@ -7,5 +7,6 @@
 Pointf GetMouseOriginReplacement(void *mgr);
 void ReadMousePosReplacement(void);
 bool SetResImmediateReplacement(void *, int, int, bool, int);
+void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fullscreen);
 
 #endif /* Replacements_h */
