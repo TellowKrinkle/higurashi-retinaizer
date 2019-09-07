@@ -47,8 +47,8 @@ enum ScreenMgrOffsets {
 Pointf GetMouseOriginReplacement(void *mgr) {
 	void *windowPtr = *(void **)getField(mgr, ScreenMgrWindowOffset);
 	if (windowPtr) {
-		WindowFakeSizer *window = (__bridge WindowFakeSizer*)windowPtr;
-		CGRect contentRect = [window actualContentRectForFrameRect:[window frame]];
+		NSWindow *window = (__bridge NSWindow*)windowPtr;
+		CGRect contentRect = [window contentRectForFrameRect:[window frame]];
 		NSScreen *screen = [[NSScreen screens] objectAtIndex:0];
 		double height = 0;
 		if (screen) {
@@ -83,7 +83,7 @@ void ReadMousePosReplacement() {
 	NSPoint windowRelative = { point.x - origin.x, point.y - origin.y };
 	void *windowPtr = *(void **)getField(screenMgr, ScreenMgrWindowOffset);
 	if (windowPtr) {
-		WindowFakeSizer *window = (__bridge WindowFakeSizer*)windowPtr;
+		NSWindow *window = (__bridge NSWindow*)windowPtr;
 		windowRelative = [window convertRectToBacking:(NSRect){windowRelative, NSZeroSize}].origin;
 	}
 	void *inputManager = unityMethods.GetInputManager();
@@ -99,7 +99,7 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 	finishRenderingMethod(gfxDevice);
 	bool isBatchMode = unityMethods.IsBatchMode();
 	if (isBatchMode) { return false; }
-	WindowFakeSizer *window = (__bridge WindowFakeSizer *)*(void **)getField(mgr, ScreenMgrWindowOffset);
+	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, ScreenMgrWindowOffset);
 	if ((([window styleMask] & NSWindowStyleMaskFullScreen) != 0) != fullscreen) {
 		[window toggleFullScreen:NULL];
 	}
@@ -126,7 +126,7 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 			[view setContext:*(CGLContextObj *)context];
 			if (!fullscreen) {
 				if (window) {
-					CGRect frame = [window convertRectToBacking:[window actualContentRectForFrameRect:[window frame]]];
+					CGRect frame = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
 					height = frame.size.height;
 					width = frame.size.width;
 				}
@@ -188,14 +188,14 @@ void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fulls
 	if (screen) {
 		bounds = [screen convertRectFromBacking:bounds];
 	}
-	WindowFakeSizer *window = (__bridge WindowFakeSizer *)*(void **)getField(mgr, ScreenMgrWindowOffset);
+	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, ScreenMgrWindowOffset);
 	if (!window) {
 		bool resizable = unityMethods.AllowResizableWindow();
 		NSWindowStyleMask style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable;
 		if (resizable) {
 			style |= NSWindowStyleMaskResizable;
 		}
-		window = [[WindowFakeSizer alloc] initWithContentRect:bounds styleMask:style backing:NSBackingStoreBuffered defer:YES];
+		window = [[NSWindow alloc] initWithContentRect:bounds styleMask:style backing:NSBackingStoreBuffered defer:YES];
 		*(void **)getField(mgr, ScreenMgrWindowOffset) = (void *)CFBridgingRetain(window);
 		[window setAcceptsMouseMovedEvents:YES];
 		id windowDelegate = [NSClassFromString(@"PlayerWindowDelegate") alloc];
@@ -219,7 +219,7 @@ void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fulls
 		[window makeKeyAndOrderFront:NULL];
 	}
 	if (!fullscreen) {
-		CGRect contentRect = [window actualContentRectForFrameRect:[window frame]];
+		CGRect contentRect = [window contentRectForFrameRect:[window frame]];
 		if (contentRect.size.width != bounds.size.width || contentRect.size.height != bounds.size.height) {
 			contentRect.origin.y -= (bounds.size.height - contentRect.size.height);
 		}
@@ -253,8 +253,8 @@ void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fulls
 }
 
 void WindowDidResizeReplacement(id<NSWindowDelegate> self, SEL sel, NSNotification * _Nonnull notification) {
-	WindowFakeSizer *window = (WindowFakeSizer *)[notification object];
-	CGRect rect = [window convertRectToBacking:[window actualContentRectForFrameRect:[window frame]]];
+	NSWindow *window = (NSWindow *)[notification object];
+	CGRect rect = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
 	if (!([window styleMask] & NSWindowStyleMaskFullScreen)) {
 		void *mgr = unityMethods.GetScreenManager();
 		void (*requestResolutionMethod)(void *, int, int, bool, int) = getVtableEntry(mgr, 0x10);

@@ -170,12 +170,12 @@ static void replaceFunction(void *oldFunction, void *newFunction) {
 
 void goRetina() {
 	initializeUnity();
+	replaceFunction(methodsToReplace.ScreenMgrGetMouseOrigin, GetMouseOriginReplacement);
+	replaceFunction(methodsToReplace.InputReadMousePosition, ReadMousePosReplacement);
+	replaceFunction(methodsToReplace.ScreenMgrSetResImmediate, SetResImmediateReplacement);
+	replaceFunction(methodsToReplace.ScreenMgrCreateAndShowWindow, CreateAndShowWindowReplacement);
+	method_setImplementation(class_getInstanceMethod(NSClassFromString(@"PlayerWindowDelegate"), @selector(windowDidResize:)), (IMP)WindowDidResizeReplacement);
 	dispatch_async(dispatch_get_main_queue(), ^{
-		replaceFunction(methodsToReplace.ScreenMgrGetMouseOrigin, GetMouseOriginReplacement);
-		replaceFunction(methodsToReplace.InputReadMousePosition, ReadMousePosReplacement);
-		replaceFunction(methodsToReplace.ScreenMgrSetResImmediate, SetResImmediateReplacement);
-		replaceFunction(methodsToReplace.ScreenMgrCreateAndShowWindow, CreateAndShowWindowReplacement);
-		method_setImplementation(class_getInstanceMethod(NSClassFromString(@"PlayerWindowDelegate"), @selector(windowDidResize:)), (IMP)WindowDidResizeReplacement);
 		NSApplication *app = [NSApplication sharedApplication];
 		for (NSWindow *window in [app orderedWindows]) {
 			NSView *view = [window contentView];
@@ -183,17 +183,6 @@ void goRetina() {
 				continue;
 			}
 			[view setWantsBestResolutionOpenGLSurface:YES];
-			object_setClass(window, [WindowFakeSizer class]);
 		}
 	});
 }
-
-@implementation WindowFakeSizer
-- (NSRect)actualContentRectForFrameRect:(NSRect)frameRect {
-	return [super contentRectForFrameRect:frameRect];
-}
-
-- (NSRect)contentRectForFrameRect:(NSRect)frameRect {
-	return [self convertRectToBacking:[super contentRectForFrameRect:frameRect]];
-}
-@end

@@ -4,12 +4,6 @@
 #import <Cocoa/Cocoa.h>
 #include "CppTypes.h"
 
-@interface WindowFakeSizer : NSWindow
-
-- (NSRect)actualContentRectForFrameRect:(NSRect)frameRect;
-
-@end
-
 @interface PlayerWindowView : NSView
 
 - (void)setContext:(CGLContextObj)context;
