@@ -8,5 +8,6 @@ Pointf GetMouseOriginReplacement(void *mgr);
 void ReadMousePosReplacement(void);
 bool SetResImmediateReplacement(void *, int, int, bool, int);
 void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fullscreen);
+void WindowDidResizeReplacement(id<NSWindowDelegate> self, SEL sel, NSNotification * notification);
 
 #endif /* Replacements_h */

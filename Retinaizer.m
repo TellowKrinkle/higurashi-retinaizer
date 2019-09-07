@@ -175,6 +175,7 @@ void goRetina() {
 		replaceFunction(methodsToReplace.InputReadMousePosition, ReadMousePosReplacement);
 		replaceFunction(methodsToReplace.ScreenMgrSetResImmediate, SetResImmediateReplacement);
 		replaceFunction(methodsToReplace.ScreenMgrCreateAndShowWindow, CreateAndShowWindowReplacement);
+		method_setImplementation(class_getInstanceMethod(NSClassFromString(@"PlayerWindowDelegate"), @selector(windowDidResize:)), (IMP)WindowDidResizeReplacement);
 		NSApplication *app = [NSApplication sharedApplication];
 		for (NSWindow *window in [app orderedWindows]) {
 			NSView *view = [window contentView];

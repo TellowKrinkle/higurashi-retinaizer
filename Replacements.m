@@ -251,3 +251,14 @@ void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fulls
 		}
 	}
 }
+
+void WindowDidResizeReplacement(id<NSWindowDelegate> self, SEL sel, NSNotification * _Nonnull notification) {
+	WindowFakeSizer *window = (WindowFakeSizer *)[notification object];
+	CGRect rect = [window convertRectToBacking:[window actualContentRectForFrameRect:[window frame]]];
+	if (!([window styleMask] & NSWindowStyleMaskFullScreen)) {
+		void *mgr = unityMethods.GetScreenManager();
+		void (*requestResolutionMethod)(void *, int, int, bool, int) = getVtableEntry(mgr, 0x10);
+		bool (*isFullscreenMethod)(void *) = getVtableEntry(mgr, 0xb8);
+		requestResolutionMethod(mgr, rect.size.width, rect.size.height, isFullscreenMethod(mgr), 0);
+	}
+}
