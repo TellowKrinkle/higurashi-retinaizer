@@ -232,11 +232,11 @@ void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fulls
 			[window setFrame:newFrame display:YES animate:YES];
 		}
 		else {
-			hasRunModdedCreateWindow = true;
 			[window setFrame:newFrame display:YES];
 			newWindowOrigin(window, newFrame, displayBounds);
 		}
 	}
+	hasRunModdedCreateWindow = true;
 	int *flag = getField(unityMethods.GetPlayerSettings(), 0xd4);
 	if (*flag == 2) {
 		[window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
