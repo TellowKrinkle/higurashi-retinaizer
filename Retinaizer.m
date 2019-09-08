@@ -176,8 +176,24 @@ static void replaceFunction(void *oldFunction, void *newFunction) {
 	mprotect((void *)pageStart, end - pageStart, PROT_READ | PROT_EXEC);
 }
 
+static bool verifyAllOffsetsWereFound() {
+	bool allFound = true;
+	for (int i = 0; i < sizeof(wantedFunctions) / sizeof(*wantedFunctions); i++) {
+		if (*(void **)wantedFunctions[i].target == NULL) {
+			fprintf(stderr, "libRetinaizer: Warning: %s was not found, not enabling retina!\n", wantedFunctions[i].name);
+			allFound = false;
+		}
+	}
+	return allFound;
+}
+
+static bool isRetina = false;
+
 void goRetina() {
+	if (isRetina) { return; }
+	isRetina = true;
 	initializeUnity();
+	if (!verifyAllOffsetsWereFound()) { return; }
 	replaceFunction(methodsToReplace.ScreenMgrGetMouseOrigin, GetMouseOriginReplacement);
 	replaceFunction(methodsToReplace.InputReadMousePosition, ReadMousePosReplacement);
 	replaceFunction(methodsToReplace.ScreenMgrGetMouseScale, GetMouseScaleReplacement);
