@@ -9,8 +9,8 @@ Compile with `clang -mmacosx-version-min=10.7 -shared -O3 -framework Cocoa -fram
 Copy the compiled `libRetinaizer.dylib` to `HigurashiGame.app/Contents/Frameworks/MonoEmbedRuntime/osx/`.  You will need a version of `Assembly-CSharp.dll` that has [this commit](https://github.com/07th-mod/higurashi-assembly/commit/0f625a5bcebdb07674531b92eb68f8d16a9bc14f) in it.
 
 ## Known Issues
-- The game window moves to the upper right immediately after launch
-- Fullscreen mode is horribly broken.  Don't try it if you don't want to have a seizure.
+- If you start the game in fullscreen and then defullscreen with the green window button (rather than an in-game control), the window will be way too big
+- Game screen resolutions are used as pixel resolutions, not display-independent-point resolutions (so 1280x720 will now make a tiny window).  It seemed like less work to do things this way rather than the other way.
 - The vtable offsets used are known to work properly with the version of Unity used by Onikakushi but have not been tested with later games.  It may break horribly on them.
 
 ## Development
