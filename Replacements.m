@@ -82,9 +82,8 @@ void ReadMousePosReplacement() {
 	int (*getHeightMethod)(void *) = getVtableEntry(screenMgr, 0xa8);
 	int screenHeight = getHeightMethod(screenMgr);
 	NSPoint windowRelative = { point.x - origin.x, point.y - origin.y };
-	void *windowPtr = *(void **)getField(screenMgr, ScreenMgrWindowOffset);
-	if (windowPtr) {
-		NSWindow *window = (__bridge NSWindow*)windowPtr;
+	NSWindow *window = (__bridge NSWindow *)*(void **)getField(screenMgr, ScreenMgrWindowOffset);
+	if (window) {
 		windowRelative = [window convertRectToBacking:(NSRect){windowRelative, NSZeroSize}].origin;
 	}
 	void *inputManager = unityMethods.GetInputManager();
@@ -124,16 +123,15 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 			CreateAndShowWindowReplacement(mgr, width, height, fullscreen);
 			PlayerWindowView *view = (__bridge PlayerWindowView *)*(void **)getField(mgr, PlayerWindowViewOffset);
 			[view setContext:*(CGLContextObj *)context];
-			if (!fullscreen) {
-				if (window) {
-					CGRect frame = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
-					height = frame.size.height;
-					width = frame.size.width;
-				}
-				else {
-					height = width = 0;
-				}
+			CGRect frame;
+			if ([window styleMask] & NSWindowStyleMaskFullScreen) {
+				frame = [window convertRectToBacking:[window frame]];
 			}
+			else {
+				frame = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
+			}
+			width = frame.size.width;
+			height = frame.size.height;
 		}
 		bool *isFullscreen = getField(mgr, 0x23);
 		*isFullscreen = fullscreen;
