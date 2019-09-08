@@ -143,15 +143,13 @@ static void initializeUnity() {
 	}
 
 	// Symbols from outside the binary (e.g. libc++) won't get found by the above code but must be public so we can get them this way
-	void *dl = dlopen(NULL, RTLD_NOW);
 	for (int i = 0; i < sizeof(wantedFunctions) / sizeof(*wantedFunctions); i++) {
 		struct WantedFunction fn = wantedFunctions[i];
 		if (*(void **)fn.target == NULL) {
 			// Skip the initial `_` when using with dlsym
-			*(void **)fn.target = dlsym(dl, fn.name + 1);
+			*(void **)fn.target = dlsym(RTLD_DEFAULT, fn.name + 1);
 		}
 	}
-	dlclose(dl);
 }
 
 /// Modifies the function pointed to by `oldFunction` to immediately jump to `newFunction`
