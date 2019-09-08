@@ -21,6 +21,8 @@ static struct MethodsToReplace {
 struct UnityMethods unityMethods = {0};
 struct CPPMethods cppMethods = {0};
 
+char *(*mono_string_to_utf8)(void *monoString);
+
 static const struct WantedFunction {
 	char *name;
 	void *target;
@@ -41,6 +43,7 @@ static const struct WantedFunction {
 	{"__Z11IsBatchmodev", &unityMethods.IsBatchMode},
 	{"__Z37MustSwitchResolutionForFullscreenModev", &unityMethods.MustSwitchResolutionForFullscreenMode},
 	{"__Z21AllowResizeableWindowv", &unityMethods.AllowResizableWindow},
+	{"__Z39Application_Get_Custom_PropUnityVersionv", &unityMethods.ApplicationGetCustomPropUnityVersion},
 
 	{"__Z12SetSyncToVBL12ObjectHandleI19GraphicsContext_TagPvEi", &unityMethods.SetSyncToVBL},
 	{"__ZN11PlayerPrefs6SetIntERKSsi", &unityMethods.PlayerPrefsSetInt},
@@ -67,6 +70,7 @@ static const struct WantedFunction {
 	{"__ZNSs4_Rep20_S_empty_rep_storageE", &cppMethods.stdStringEmptyRepStorage},
 	{"__ZNSs4_Rep10_M_destroyERKSaIcE", &cppMethods.DestroyStdStringRep},
 	{"__ZdlPv", &cppMethods.operatorDelete},
+	{"_mono_string_to_utf8", &mono_string_to_utf8},
 };
 
 # pragma mark - Symbol loading and replacement
@@ -185,13 +189,32 @@ static bool verifyAllOffsetsWereFound() {
 	return allFound;
 }
 
+static bool verifyUnityVersion(const char *version) {
+	if (strcmp(version, "5.2.2f1") == 0) {
+		return true;
+	}
+	fprintf(stderr, "libRetinaizer: Unrecognized unity version %s, not enabling retina\n", version);
+	return false;
+}
+
+static char * getUnityVersion() {
+	void *versionMonoString = unityMethods.ApplicationGetCustomPropUnityVersion();
+	return mono_string_to_utf8(versionMonoString);
+}
+
 static bool isRetina = false;
+static const char *unityVersion = "unknown";
 
 void goRetina() {
 	if (isRetina) { return; }
 	isRetina = true;
 	initializeUnity();
-	if (!verifyAllOffsetsWereFound()) { return; }
+	if (unityMethods.ApplicationGetCustomPropUnityVersion && mono_string_to_utf8) {
+		unityVersion = strdup(getUnityVersion());
+	}
+	bool unityVersionOkay = verifyUnityVersion(unityVersion);
+	bool offsetsFound = verifyAllOffsetsWereFound();
+	if (!unityVersionOkay || !offsetsFound) { return; }
 	replaceFunction(methodsToReplace.ScreenMgrGetMouseOrigin, GetMouseOriginReplacement);
 	replaceFunction(methodsToReplace.InputReadMousePosition, ReadMousePosReplacement);
 	replaceFunction(methodsToReplace.ScreenMgrGetMouseScale, GetMouseScaleReplacement);

@@ -26,6 +26,7 @@ extern struct UnityMethods {
 	bool (*IsBatchMode)(void);
 	bool (*MustSwitchResolutionForFullscreenMode)(void);
 	bool (*AllowResizableWindow)(void);
+	char *(*ApplicationGetCustomPropUnityVersion)(void);
 
 	void (*SetSyncToVBL)(void *, int);
 	void (*PlayerPrefsSetInt)(StdString *, int);
