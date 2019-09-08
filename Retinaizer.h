@@ -35,7 +35,6 @@ extern struct UnityMethods {
 	void (*GfxHelperDrawQuad)(void *, void *, bool, float, float);
 
 	CGDirectDisplayID (*ScreenMgrGetDisplayID)(void *);
-	Pointf (*ScreenMgrGetMouseScale)(void *);
 	void (*ScreenMgrWillChangeMode)(void *, IntVector *);
 	void (*ScreenMgrSetFullscreenResolutionRobustly)(void *, int *, int *, int, bool, void *);
 	void (*ScreenMgrDidChangeScreenMode)(void *, int, int, int, void *, IntVector *);

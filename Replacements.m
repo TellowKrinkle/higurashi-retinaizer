@@ -91,6 +91,18 @@ void ReadMousePosReplacement() {
 	*output = (Pointf){ windowRelative.x, screenHeight - windowRelative.y };
 }
 
+Pointf GetMouseScaleReplacement(void *mgr) {
+	bool mustSwitch = unityMethods.MustSwitchResolutionForFullscreenMode();
+	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, ScreenMgrWindowOffset);
+	if (!mustSwitch && window) {
+		CGRect frame = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
+		int *width = getField(mgr, 0x64);
+		int *height = getField(mgr, 0x68);
+		return (Pointf){ *width / frame.size.width, *height / frame.size.height };
+	}
+	return (Pointf){1, 1};
+}
+
 bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscreen, int refreshRate) {
 	bool ret = false;
 	void *gfxDevice = unityMethods.GetGfxDevice();

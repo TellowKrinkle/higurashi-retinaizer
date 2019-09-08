@@ -12,6 +12,7 @@
 static struct MethodsToReplace {
 	void (*InputReadMousePosition)(void);
 	Pointf (*ScreenMgrGetMouseOrigin)(void *);
+	Pointf (*ScreenMgrGetMouseScale)(void *);
 	bool (*ScreenMgrSetResImmediate)(void *, int, int, bool, int);
 	void (*ScreenMgrCreateAndShowWindow)(void *, int, int, bool);
 	void (*ScreenMgrPreBlit)(void *);
@@ -49,7 +50,7 @@ static const struct WantedFunction {
 	{"__ZN14GraphicsHelper8DrawQuadER9GfxDevicePK14ChannelAssignsbff", &unityMethods.GfxHelperDrawQuad},
 
 	{"__ZNK16ScreenManagerOSX12GetDisplayIDEv", &unityMethods.ScreenMgrGetDisplayID},
-	{"__ZN26ScreenManagerOSXStandalone13GetMouseScaleEv", &unityMethods.ScreenMgrGetMouseScale},
+	{"__ZN26ScreenManagerOSXStandalone13GetMouseScaleEv", &methodsToReplace.ScreenMgrGetMouseScale},
 	{"__ZN16ScreenManagerOSX14WillChangeModeERSt6vectorIiSaIiEE", &unityMethods.ScreenMgrWillChangeMode},
 	{"__ZN16ScreenManagerOSX31SetFullscreenResolutionRobustlyERiS0_ib12ObjectHandleI19GraphicsContext_TagPvE", &unityMethods.ScreenMgrSetFullscreenResolutionRobustly},
 	{"__ZN16ScreenManagerOSX19DidChangeScreenModeEiii12ObjectHandleI19GraphicsContext_TagPvERSt6vectorIiSaIiEE", &unityMethods.ScreenMgrDidChangeScreenMode},
@@ -179,6 +180,7 @@ void goRetina() {
 	initializeUnity();
 	replaceFunction(methodsToReplace.ScreenMgrGetMouseOrigin, GetMouseOriginReplacement);
 	replaceFunction(methodsToReplace.InputReadMousePosition, ReadMousePosReplacement);
+	replaceFunction(methodsToReplace.ScreenMgrGetMouseScale, GetMouseScaleReplacement);
 	replaceFunction(methodsToReplace.ScreenMgrSetResImmediate, SetResImmediateReplacement);
 	replaceFunction(methodsToReplace.ScreenMgrCreateAndShowWindow, CreateAndShowWindowReplacement);
 	replaceFunction(methodsToReplace.ScreenMgrPreBlit, PreBlitReplacement);
