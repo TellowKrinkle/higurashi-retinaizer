@@ -14,6 +14,7 @@ static struct MethodsToReplace {
 	Pointf (*ScreenMgrGetMouseOrigin)(void *);
 	bool (*ScreenMgrSetResImmediate)(void *, int, int, bool, int);
 	void (*ScreenMgrCreateAndShowWindow)(void *, int, int, bool);
+	void (*ScreenMgrPreBlit)(void *);
 } methodsToReplace = {0};
 
 struct UnityMethods unityMethods = {0};
@@ -27,12 +28,14 @@ static const struct WantedFunction {
 	{"__ZN26ScreenManagerOSXStandalone14GetMouseOriginEv", &methodsToReplace.ScreenMgrGetMouseOrigin},
 	{"__ZN26ScreenManagerOSXStandalone22SetResolutionImmediateEiibi", &methodsToReplace.ScreenMgrSetResImmediate},
 	{"__ZN26ScreenManagerOSXStandalone19CreateAndShowWindowEiib", &methodsToReplace.ScreenMgrCreateAndShowWindow},
+	{"__ZN26ScreenManagerOSXStandalone7PreBlitEv", &methodsToReplace.ScreenMgrPreBlit},
 
 	{"__Z16GetScreenManagerv", &unityMethods.GetScreenManager},
 	{"__Z12GetGfxDevicev", &unityMethods.GetGfxDevice},
 	{"__Z15GetInputManagerv", &unityMethods.GetInputManager},
 	{"__Z18GetQualitySettingsv", &unityMethods.GetQualitySettings},
 	{"__Z17GetPlayerSettingsv", &unityMethods.GetPlayerSettings},
+	{"__Z16GetRealGfxDevicev", &unityMethods.GetRealGfxDevice},
 	{"__Z23GetRequestedDeviceLevelv", &unityMethods.GetRequestedDeviceLevel},
 	{"__Z11IsBatchmodev", &unityMethods.IsBatchMode},
 	{"__Z37MustSwitchResolutionForFullscreenModev", &unityMethods.MustSwitchResolutionForFullscreenMode},
@@ -40,10 +43,10 @@ static const struct WantedFunction {
 
 	{"__Z12SetSyncToVBL12ObjectHandleI19GraphicsContext_TagPvEi", &unityMethods.SetSyncToVBL},
 	{"__ZN11PlayerPrefs6SetIntERKSsi", &unityMethods.PlayerPrefsSetInt},
-
 	{"__Z14MakeNewContext16GfxDeviceLevelGLiiibb17DepthBufferFormatPib", &unityMethods.MakeNewContext},
 	{"__ZN13RenderTexture10ReleaseAllEv", &unityMethods.RenderTextureReleaseAll},
 	{"__Z20DestroyMainContextGLv", &unityMethods.DestroyMainContextGL},
+	{"__ZN14GraphicsHelper8DrawQuadER9GfxDevicePK14ChannelAssignsbff", &unityMethods.GfxHelperDrawQuad},
 
 	{"__ZNK16ScreenManagerOSX12GetDisplayIDEv", &unityMethods.ScreenMgrGetDisplayID},
 	{"__ZN26ScreenManagerOSXStandalone13GetMouseScaleEv", &unityMethods.ScreenMgrGetMouseScale},
@@ -52,8 +55,12 @@ static const struct WantedFunction {
 	{"__ZN16ScreenManagerOSX19DidChangeScreenModeEiii12ObjectHandleI19GraphicsContext_TagPvERSt6vectorIiSaIiEE", &unityMethods.ScreenMgrDidChangeScreenMode},
 	{"__ZN26ScreenManagerOSXStandalone28SetupDownscaledFullscreenFBOEii", &unityMethods.ScreenMgrSetupDownscaledFullscreenFBO},
 
+	{"__ZN10Matrix4x4f8SetOrthoEffffff", &unityMethods.Matrix4x4fSetOrtho},
+
 	{"_gDefaultFBOGL", &unityMethods.gDefaultFBOGL},
 	{"_g_PopUpWindow", &unityMethods.gPopUpWindow},
+	{"__ZN10Matrix4x4f8identityE", &unityMethods.identityMatrix},
+	{"__ZL14displayDevices", &unityMethods.displayDevices},
 
 	{"__ZNSsC1EPKcRKSaIcE", &cppMethods.MakeStdString},
 	{"__ZNSs4_Rep20_S_empty_rep_storageE", &cppMethods.stdStringEmptyRepStorage},
@@ -174,6 +181,7 @@ void goRetina() {
 	replaceFunction(methodsToReplace.InputReadMousePosition, ReadMousePosReplacement);
 	replaceFunction(methodsToReplace.ScreenMgrSetResImmediate, SetResImmediateReplacement);
 	replaceFunction(methodsToReplace.ScreenMgrCreateAndShowWindow, CreateAndShowWindowReplacement);
+	replaceFunction(methodsToReplace.ScreenMgrPreBlit, PreBlitReplacement);
 	method_setImplementation(class_getInstanceMethod(NSClassFromString(@"PlayerWindowDelegate"), @selector(windowDidResize:)), (IMP)WindowDidResizeReplacement);
 	dispatch_async(dispatch_get_main_queue(), ^{
 		NSApplication *app = [NSApplication sharedApplication];

@@ -1,5 +1,6 @@
 #include "Replacements.h"
 #include <OpenGL/glext.h>
+#include <OpenGL/gl.h>
 #include <Carbon/Carbon.h>
 
 #pragma mark - Helpers
@@ -91,7 +92,6 @@ void ReadMousePosReplacement() {
 	*output = (Pointf){ windowRelative.x, screenHeight - windowRelative.y };
 }
 
-// TODO: Currently unmodified
 bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscreen, int refreshRate) {
 	bool ret = false;
 	void *gfxDevice = unityMethods.GetGfxDevice();
@@ -156,6 +156,10 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 		if (fullscreen && !unityMethods.MustSwitchResolutionForFullscreenMode()) {
 			CGDirectDisplayID display = unityMethods.ScreenMgrGetDisplayID(mgr);
 			CGRect bounds = CGDisplayBounds(display);
+			NSScreen *screen = screenForID(display);
+			if (screen) {
+				bounds = [screen convertRectToBacking:bounds];
+			}
 			if (width != bounds.size.width || height != bounds.size.height) {
 				unityMethods.ScreenMgrSetupDownscaledFullscreenFBO(mgr, width, height);
 			}
@@ -249,6 +253,38 @@ void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fulls
 		if ((([window styleMask] & NSWindowStyleMaskFullScreen) != 0) != fullscreen) {
 			[window toggleFullScreen:NULL];
 		}
+	}
+}
+
+void PreBlitReplacement(void *mgr) {
+	int defaultFBOGL = *unityMethods.gDefaultFBOGL;
+	if (defaultFBOGL != 0) {
+		GLuint *framebuffer1 = getField(mgr, 0x84);
+		GLuint *framebuffer2 = getField(mgr, 0x8c);
+		GLint *width = getField(mgr, 0x64);
+		GLint *height = getField(mgr, 0x68);
+		if (*framebuffer2 != 0) {
+			glBindFramebufferEXT(GL_READ_FRAMEBUFFER, *framebuffer2);
+			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, *framebuffer1);
+			glBlitFramebufferEXT(0, 0, *width, *height, 0, 0, *width, *height, 0x4000, GL_NEAREST);
+		}
+		*unityMethods.gDefaultFBOGL = 0;
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+		void *otherMgr = unityMethods.GetScreenManager();
+		CGDirectDisplayID display = unityMethods.ScreenMgrGetDisplayID(otherMgr);
+		CGRect bounds = CGDisplayBounds(display);
+		Matrix4x4f matrix;
+		unityMethods.Matrix4x4fSetOrtho(&matrix, 0, 1, 0, 1, -1, 100);
+		void *gfxDevice = unityMethods.GetRealGfxDevice();
+		void (*setProjectionMatrixMethod)(void *, Matrix4x4f *) = getVtableEntry(gfxDevice, 0xe0);
+		void (*setViewMatrixMethod)(void *, Matrix4x4f *) = getVtableEntry(gfxDevice, 0xd8);
+		void (*setViewportMethod)(void *, RectTInt *) = getVtableEntry(gfxDevice, 0x128);
+		setProjectionMatrixMethod(gfxDevice, &matrix);
+		setViewMatrixMethod(gfxDevice, unityMethods.identityMatrix);
+		RectTInt viewport = {0, 0, bounds.size.width, bounds.size.height};
+		setViewportMethod(gfxDevice, &viewport);
+		unityMethods.GfxHelperDrawQuad(gfxDevice, NULL, false, 1, 1);
+		*unityMethods.gDefaultFBOGL = defaultFBOGL;
 	}
 }
 

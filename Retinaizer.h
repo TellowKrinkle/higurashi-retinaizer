@@ -21,6 +21,7 @@ extern struct UnityMethods {
 	void *(*GetGfxDevice)(void);
 	void *(*GetQualitySettings)(void);
 	void *(*GetPlayerSettings)(void);
+	void *(*GetRealGfxDevice)(void);
 	uint32_t (*GetRequestedDeviceLevel)(void);
 	bool (*IsBatchMode)(void);
 	bool (*MustSwitchResolutionForFullscreenMode)(void);
@@ -29,9 +30,9 @@ extern struct UnityMethods {
 	void (*SetSyncToVBL)(void *, int);
 	void (*PlayerPrefsSetInt)(StdString *, int);
 	void *(*MakeNewContext)(uint32_t, int, int, int, bool, bool, uint32_t, int *, bool);
-
 	void (*RenderTextureReleaseAll)(void);
 	void (*DestroyMainContextGL)(void);
+	void (*GfxHelperDrawQuad)(void *, void *, bool, float, float);
 
 	CGDirectDisplayID (*ScreenMgrGetDisplayID)(void *);
 	Pointf (*ScreenMgrGetMouseScale)(void *);
@@ -40,8 +41,12 @@ extern struct UnityMethods {
 	void (*ScreenMgrDidChangeScreenMode)(void *, int, int, int, void *, IntVector *);
 	void (*ScreenMgrSetupDownscaledFullscreenFBO)(void *, int, int);
 
+	void (*Matrix4x4fSetOrtho)(Matrix4x4f *, float, float, float, float, float, float);
+
 	int *gDefaultFBOGL;
 	bool *gPopUpWindow;
+	Matrix4x4f *identityMatrix;
+	struct DisplayDevice (*displayDevices)[8];
 } unityMethods;
 
 extern struct CPPMethods {
