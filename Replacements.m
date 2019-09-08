@@ -273,6 +273,10 @@ void PreBlitReplacement(void *mgr) {
 		void *otherMgr = unityMethods.GetScreenManager();
 		CGDirectDisplayID display = unityMethods.ScreenMgrGetDisplayID(otherMgr);
 		CGRect bounds = CGDisplayBounds(display);
+		NSScreen *screen = screenForID(display);
+		if (screen) {
+			bounds = [screen convertRectToBacking:bounds];
+		}
 		Matrix4x4f matrix;
 		unityMethods.Matrix4x4fSetOrtho(&matrix, 0, 1, 0, 1, -1, 100);
 		void *gfxDevice = unityMethods.GetRealGfxDevice();
