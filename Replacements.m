@@ -44,17 +44,16 @@ enum ScreenMgrOffsets {
 };
 
 #pragma mark - Replacement Functions
+// Note: All functions have checks of toggleFullScreen support disabled, since this should only run on retina (10.7+) macs
+// Higurashi games actually have an official minimum version of 10.11 so this isn't an issue, but if you plan to run this on a game that supports older macOS versions, add an @available check to goRetina.
 
 Pointf GetMouseOriginReplacement(void *mgr) {
-	void *windowPtr = *(void **)getField(mgr, ScreenMgrWindowOffset);
-	if (windowPtr) {
-		NSWindow *window = (__bridge NSWindow*)windowPtr;
+	// Currently unmodified from the original, previously, when we overrode NSWindow contentRectForFrameRect we needed to modify this to undo that, but we no longer use that hack.
+	NSWindow *window = (__bridge NSWindow*)*(void **)getField(mgr, ScreenMgrWindowOffset);
+	if (window) {
 		CGRect contentRect = [window contentRectForFrameRect:[window frame]];
 		NSScreen *screen = [[NSScreen screens] objectAtIndex:0];
-		double height = 0;
-		if (screen) {
-			height = [screen frame].size.height;
-		}
+		double height = [screen frame].size.height;
 		Pointf ret = (Pointf){contentRect.origin.x, height - contentRect.origin.y - contentRect.size.height};
 		return ret;
 	}
@@ -74,13 +73,15 @@ void ReadMousePosReplacement() {
 	if (isFullscreenMethod(screenMgr)) {
 		CGDirectDisplayID displayID = unityMethods.ScreenMgrGetDisplayID(screenMgr);
 		origin = CGDisplayBounds(displayID).origin;
+		// Original binary gets mouse scale and multiplies by it.  In macOS, mouse coordinates are in display points, as are window positions, so multiplying by mouse scale would break things rather than fixing things.
 	}
 	else {
 		Pointf pt = GetMouseOriginReplacement(screenMgr);
 		origin = (CGPoint){ pt.x, pt.y };
 	}
+	// Note: the height from ScreenManager is in retina coordinates
 	int (*getHeightMethod)(void *) = getVtableEntry(screenMgr, 0xa8);
-	int screenHeight = getHeightMethod(screenMgr);
+	int windowHeight = getHeightMethod(screenMgr);
 	NSPoint windowRelative = { point.x - origin.x, point.y - origin.y };
 	NSWindow *window = (__bridge NSWindow *)*(void **)getField(screenMgr, ScreenMgrWindowOffset);
 	if (window) {
@@ -88,13 +89,14 @@ void ReadMousePosReplacement() {
 	}
 	void *inputManager = unityMethods.GetInputManager();
 	Pointf *output = getField(inputManager, 0xb0);
-	*output = (Pointf){ windowRelative.x, screenHeight - windowRelative.y };
+	*output = (Pointf){ windowRelative.x, windowHeight - windowRelative.y };
 }
 
 Pointf GetMouseScaleReplacement(void *mgr) {
 	bool mustSwitch = unityMethods.MustSwitchResolutionForFullscreenMode();
 	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, ScreenMgrWindowOffset);
 	if (!mustSwitch && window) {
+		// Added convertRectToBacking: for retina support
 		CGRect frame = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
 		int *width = getField(mgr, 0x64);
 		int *height = getField(mgr, 0x68);
@@ -113,6 +115,8 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, ScreenMgrWindowOffset);
 	if ((([window styleMask] & NSWindowStyleMaskFullScreen) != 0) != fullscreen) {
 		[window toggleFullScreen:NULL];
+		// The original binary doesn't do this, but when defullscreening with the green window button, this method is called with fullscreen still true.  This causes toggleFullScreen to do nothing (because it's already happening) and messes up later code which assumes the fullscreen variable corresponds to the state of the window.
+		fullscreen = [window styleMask] & NSWindowStyleMaskFullScreen;
 	}
 	IntVector modeVec = {0};
 	unityMethods.ScreenMgrWillChangeMode(mgr, &modeVec);
@@ -135,8 +139,9 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 			CreateAndShowWindowReplacement(mgr, width, height, fullscreen);
 			PlayerWindowView *view = (__bridge PlayerWindowView *)*(void **)getField(mgr, PlayerWindowViewOffset);
 			[view setContext:*(CGLContextObj *)context];
+			// Original binary only updates width and height in non-fullscreen, which causes weirdness with retina because then the ScreenManager height would be the retina height for non-fs windows and non-retina height for fs windows.
 			CGRect frame;
-			if ([window styleMask] & NSWindowStyleMaskFullScreen) {
+			if (fullscreen) {
 				frame = [window convertRectToBacking:[window frame]];
 			}
 			else {
