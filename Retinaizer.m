@@ -21,8 +21,6 @@ static struct MethodsToReplace {
 struct UnityMethods unityMethods = {0};
 struct CPPMethods cppMethods = {0};
 
-char *(*mono_string_to_utf8)(void *monoString);
-
 static const struct WantedFunction {
 	char *name;
 	void *target;
@@ -70,7 +68,7 @@ static const struct WantedFunction {
 	{"__ZNSs4_Rep20_S_empty_rep_storageE", &cppMethods.stdStringEmptyRepStorage},
 	{"__ZNSs4_Rep10_M_destroyERKSaIcE", &cppMethods.DestroyStdStringRep},
 	{"__ZdlPv", &cppMethods.operatorDelete},
-	{"_mono_string_to_utf8", &mono_string_to_utf8},
+	{"_mono_string_to_utf8", &cppMethods.mono_string_to_utf8},
 };
 
 # pragma mark - Symbol loading and replacement
@@ -199,7 +197,7 @@ static bool verifyUnityVersion(const char *version) {
 
 static char * getUnityVersion() {
 	void *versionMonoString = unityMethods.ApplicationGetCustomPropUnityVersion();
-	return mono_string_to_utf8(versionMonoString);
+	return cppMethods.mono_string_to_utf8(versionMonoString);
 }
 
 static bool isRetina = false;
@@ -209,7 +207,7 @@ void goRetina() {
 	if (isRetina) { return; }
 	isRetina = true;
 	initializeUnity();
-	if (unityMethods.ApplicationGetCustomPropUnityVersion && mono_string_to_utf8) {
+	if (unityMethods.ApplicationGetCustomPropUnityVersion && cppMethods.mono_string_to_utf8) {
 		unityVersion = strdup(getUnityVersion());
 	}
 	bool unityVersionOkay = verifyUnityVersion(unityVersion);
@@ -232,4 +230,9 @@ void goRetina() {
 			[view setWantsBestResolutionOpenGLSurface:YES];
 		}
 	});
+}
+
+__attribute__((constructor))
+void setupRetinaizer() {
+	dispatch_async_f(dispatch_get_main_queue(), NULL, goRetina);
 }

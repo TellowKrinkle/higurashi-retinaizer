@@ -54,6 +54,7 @@ extern struct CPPMethods {
 	void *stdStringEmptyRepStorage;
 	void (*DestroyStdStringRep)(void *, void *); // &this, allocator
 	void (*operatorDelete)(void *);
+	char *(*mono_string_to_utf8)(void *monoString);
 } cppMethods;
 
 #endif /* Retinaizer_h */
