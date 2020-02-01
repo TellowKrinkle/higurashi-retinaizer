@@ -41,10 +41,17 @@ struct ScreenManagerOffsets screenMgrOffsets = {
 	.getHeightMethod = 0xa8,
 	.isFullscreenMethod = 0xb8,
 	.releaseModeMethod = 0x100,
+	.windowOffset = 0x70,
+	.playerWindowViewOffset = 0x78,
+	.playerWindowDelegateOffset = 0, // Not used in Onikakushi
 };
 
 struct GfxDeviceOffsets gfxDevOffsets = {
 	.finishRenderingMethod = 0x3f0,
+};
+
+struct PlayerSettingsOffsets playerSettingsOffsets = {
+	.collectionBehaviorFlag = 0xd4,
 };
 
 static const struct WantedFunction {
@@ -244,7 +251,9 @@ static bool verifyAndConfigureForUnityVersion(const char *version) {
 	screenMgrOffsets.getHeightMethod = 0xb0;
 	screenMgrOffsets.isFullscreenMethod = 0xc0;
 	screenMgrOffsets.releaseModeMethod = 0x108;
+	screenMgrOffsets.playerWindowDelegateOffset = 0x80;
 	gfxDevOffsets.finishRenderingMethod = 0x3e0;
+	playerSettingsOffsets.collectionBehaviorFlag = 0xd8;
 	if (strcmp(version, "5.3.4p1") == 0) {
 		UnityVersion = UNITY_VERSION_TATARI_OLD;
 		return true;

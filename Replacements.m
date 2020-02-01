@@ -38,18 +38,13 @@ static NSScreen *screenForID(CGDirectDisplayID display) {
 	return nil;
 }
 
-enum ScreenMgrOffsets {
-	ScreenMgrWindowOffset = 0x70,
-	PlayerWindowViewOffset = 0x78,
-};
-
 #pragma mark - Replacement Functions
 // Note: All functions have checks of toggleFullScreen support disabled, since this should only run on retina (10.7+) macs
 // Higurashi games actually have an official minimum version of 10.11 so this isn't an issue, but if you plan to run this on a game that supports older macOS versions, add an @available check to goRetina.
 
 Pointf GetMouseOriginReplacement(void *mgr) {
 	// Currently unmodified from the original, previously, when we overrode NSWindow contentRectForFrameRect we needed to modify this to undo that, but we no longer use that hack.
-	NSWindow *window = (__bridge NSWindow*)*(void **)getField(mgr, ScreenMgrWindowOffset);
+	NSWindow *window = (__bridge NSWindow*)*(void **)getField(mgr, screenMgrOffsets.windowOffset);
 	if (window) {
 		CGRect contentRect = [window contentRectForFrameRect:[window frame]];
 		NSScreen *screen = [[NSScreen screens] objectAtIndex:0];
@@ -88,7 +83,7 @@ void ReadMousePosReplacement() {
 	int (*getHeightMethod)(void *) = getVtableEntry(screenMgr, screenMgrOffsets.getHeightMethod);
 	int windowHeight = getHeightMethod(screenMgr);
 	NSPoint windowRelative = { point.x - origin.x, point.y - origin.y };
-	NSWindow *window = (__bridge NSWindow *)*(void **)getField(screenMgr, ScreenMgrWindowOffset);
+	NSWindow *window = (__bridge NSWindow *)*(void **)getField(screenMgr, screenMgrOffsets.windowOffset);
 	if (window) {
 		windowRelative = [window convertRectToBacking:(NSRect){windowRelative, NSZeroSize}].origin;
 	}
@@ -99,7 +94,7 @@ void ReadMousePosReplacement() {
 
 Pointf GetMouseScaleReplacement(void *mgr) {
 	bool mustSwitch = unityMethods.MustSwitchResolutionForFullscreenMode();
-	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, ScreenMgrWindowOffset);
+	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, screenMgrOffsets.windowOffset);
 	if (!mustSwitch && window) {
 		// Added convertRectToBacking: for retina support
 		CGRect frame = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
@@ -122,7 +117,7 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 	finishRenderingMethod(gfxDevice);
 	bool isBatchMode = unityMethods.IsBatchMode();
 	if (isBatchMode) { return false; }
-	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, ScreenMgrWindowOffset);
+	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, screenMgrOffsets.windowOffset);
 	if ((([window styleMask] & NSWindowStyleMaskFullScreen) != 0) != fullscreen) {
 		[window toggleFullScreen:NULL];
 		// The original binary doesn't do this, but when defullscreening with the green window button, this method is called with fullscreen still true.  This causes toggleFullScreen to do nothing (because it's already happening) and messes up later code which assumes the fullscreen variable corresponds to the state of the window.
@@ -155,7 +150,7 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 		}
 		else {
 			CreateAndShowWindowReplacement(mgr, width, height, fullscreen);
-			PlayerWindowView *view = (__bridge PlayerWindowView *)*(void **)getField(mgr, PlayerWindowViewOffset);
+			PlayerWindowView *view = (__bridge PlayerWindowView *)*(void **)getField(mgr, screenMgrOffsets.playerWindowViewOffset);
 			if (needsToMakeContext) {
 				[view setContext:*(CGLContextObj *)context];
 			}
@@ -227,7 +222,7 @@ void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fulls
 	if (screen) {
 		bounds = [screen convertRectFromBacking:bounds];
 	}
-	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, ScreenMgrWindowOffset);
+	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, screenMgrOffsets.windowOffset);
 	if (!window) {
 		bool resizable = unityMethods.AllowResizableWindow();
 		NSWindowStyleMask style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable;
@@ -235,16 +230,20 @@ void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fulls
 			style |= NSWindowStyleMaskResizable;
 		}
 		window = [[NSWindow alloc] initWithContentRect:bounds styleMask:style backing:NSBackingStoreBuffered defer:YES];
-		*(void **)getField(mgr, ScreenMgrWindowOffset) = (void *)CFBridgingRetain(window);
+		*(void **)getField(mgr, screenMgrOffsets.windowOffset) = (void *)CFBridgingRetain(window);
 		[window setAcceptsMouseMovedEvents:YES];
 		id windowDelegate = [NSClassFromString(@"PlayerWindowDelegate") alloc];
+		if (UnityVersion >= UNITY_VERSION_TATARI_OLD) {
+			windowDelegate = [windowDelegate init];
+			*(void **)getField(mgr, screenMgrOffsets.playerWindowDelegateOffset) = (void *)CFBridgingRetain(windowDelegate);
+		}
 		[window setDelegate:windowDelegate];
 		[window setBackgroundColor:[NSColor blackColor]];
 		if (*unityMethods.gPopUpWindow) {
 			[window setStyleMask:resizable ? NSWindowStyleMaskResizable : 0];
 		}
 		PlayerWindowView *view = [[NSClassFromString(@"PlayerWindowView") alloc] initWithFrame:bounds];
-		*(void **)getField(mgr, PlayerWindowViewOffset) = (void *)CFBridgingRetain(view);
+		*(void **)getField(mgr, screenMgrOffsets.playerWindowViewOffset) = (void *)CFBridgingRetain(view);
 		[window setContentView:view];
 		[window makeFirstResponder:view];
 		newWindowOrigin(window, [window frame], displayBounds);
@@ -272,7 +271,7 @@ void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fulls
 		}
 	}
 	hasRunModdedCreateWindow = true;
-	int *flag = getField(unityMethods.GetPlayerSettings(), 0xd4);
+	int *flag = getField(unityMethods.GetPlayerSettings(), playerSettingsOffsets.collectionBehaviorFlag);
 	if (*flag == 2) {
 		[window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
 	}

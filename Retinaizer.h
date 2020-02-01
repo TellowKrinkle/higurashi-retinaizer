@@ -67,10 +67,17 @@ extern struct ScreenManagerOffsets {
 	size_t getHeightMethod;
 	size_t isFullscreenMethod;
 	size_t releaseModeMethod;
+	size_t windowOffset;
+	size_t playerWindowViewOffset;
+	size_t playerWindowDelegateOffset;
 } screenMgrOffsets;
 
 extern struct GfxDeviceOffsets {
 	size_t finishRenderingMethod;
 } gfxDevOffsets;
+
+extern struct PlayerSettingsOffsets {
+	size_t collectionBehaviorFlag;
+} playerSettingsOffsets;
 
 #endif /* Retinaizer_h */
