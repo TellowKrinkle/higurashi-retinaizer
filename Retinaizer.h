@@ -15,6 +15,11 @@ typedef struct Pointf {
 	float y;
 } Pointf;
 
+/// 6-digit hex number where each pair of digits represents one part of the Unity semantic version (so 5.2.2 would be 0x050202)
+extern int UnityVersion;
+static const int UNITY_VERSION_ONI = 0x050202;
+static const int UNITY_VERSION_TATARI_OLD = 0x050304;
+
 extern struct UnityMethods {
 	void *(*GetScreenManager)(void);
 	void *(*GetInputManager)(void);
@@ -37,13 +42,14 @@ extern struct UnityMethods {
 
 	CGDirectDisplayID (*ScreenMgrGetDisplayID)(void *);
 	void (*ScreenMgrWillChangeMode)(void *, IntVector *);
-	void (*ScreenMgrSetFullscreenResolutionRobustly)(void *, int *, int *, int, bool, void *);
+	bool (*ScreenMgrSetFullscreenResolutionRobustly)(void *, int *, int *, int, bool, void *);
 	void (*ScreenMgrDidChangeScreenMode)(void *, int, int, int, void *, IntVector *);
 	void (*ScreenMgrSetupDownscaledFullscreenFBO)(void *, int, int);
 
 	void (*Matrix4x4fSetOrtho)(Matrix4x4f *, float, float, float, float, float, float);
 
 	int *gDefaultFBOGL;
+	int *gRenderer;
 	bool *gPopUpWindow;
 	Matrix4x4f *identityMatrix;
 	struct DisplayDevice (*displayDevices)[8];
@@ -56,5 +62,15 @@ extern struct CPPMethods {
 	void (*operatorDelete)(void *);
 	char *(*mono_string_to_utf8)(void *monoString);
 } cppMethods;
+
+extern struct ScreenManagerOffsets {
+	size_t getHeightMethod;
+	size_t isFullscreenMethod;
+	size_t releaseModeMethod;
+} screenMgrOffsets;
+
+extern struct GfxDeviceOffsets {
+	size_t finishRenderingMethod;
+} gfxDevOffsets;
 
 #endif /* Retinaizer_h */

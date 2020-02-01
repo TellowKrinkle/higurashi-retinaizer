@@ -62,13 +62,18 @@ Pointf GetMouseOriginReplacement(void *mgr) {
 	}
 }
 
+Pointf *TatariGetMouseOriginReplacement(Pointf *output, void *mgr) {
+	*output = GetMouseOriginReplacement(mgr);
+	return output;
+}
+
 void ReadMousePosReplacement() {
 	CGEventRef event = CGEventCreate(NULL);
 	CGPoint point = CGEventGetLocation(event);
 	CFRelease(event);
 
 	void *screenMgr = unityMethods.GetScreenManager();
-	char(*isFullscreenMethod)(void *) = getVtableEntry(screenMgr, 0xb8);
+	char(*isFullscreenMethod)(void *) = getVtableEntry(screenMgr, screenMgrOffsets.isFullscreenMethod);
 	CGPoint origin;
 	if (isFullscreenMethod(screenMgr)) {
 		CGDirectDisplayID displayID = unityMethods.ScreenMgrGetDisplayID(screenMgr);
@@ -80,7 +85,7 @@ void ReadMousePosReplacement() {
 		origin = (CGPoint){ pt.x, pt.y };
 	}
 	// Note: the height from ScreenManager is in retina coordinates
-	int (*getHeightMethod)(void *) = getVtableEntry(screenMgr, 0xa8);
+	int (*getHeightMethod)(void *) = getVtableEntry(screenMgr, screenMgrOffsets.getHeightMethod);
 	int windowHeight = getHeightMethod(screenMgr);
 	NSPoint windowRelative = { point.x - origin.x, point.y - origin.y };
 	NSWindow *window = (__bridge NSWindow *)*(void **)getField(screenMgr, ScreenMgrWindowOffset);
@@ -105,10 +110,15 @@ Pointf GetMouseScaleReplacement(void *mgr) {
 	return (Pointf){1, 1};
 }
 
+Pointf *TatariGetMouseScaleReplacement(Pointf *output, void *mgr) {
+	*output = GetMouseScaleReplacement(mgr);
+	return output;
+}
+
 bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscreen, int refreshRate) {
 	bool ret = false;
 	void *gfxDevice = unityMethods.GetGfxDevice();
-	void (*finishRenderingMethod)(void *) = getVtableEntry(gfxDevice, 0x3f0);
+	void (*finishRenderingMethod)(void *) = getVtableEntry(gfxDevice, gfxDevOffsets.finishRenderingMethod);
 	finishRenderingMethod(gfxDevice);
 	bool isBatchMode = unityMethods.IsBatchMode();
 	if (isBatchMode) { return false; }
@@ -120,25 +130,35 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 	}
 	IntVector modeVec = {0};
 	unityMethods.ScreenMgrWillChangeMode(mgr, &modeVec);
-	void (*releaseModeMethod)(void *) = getVtableEntry(mgr, 0x100);
+	void (*releaseModeMethod)(void *) = getVtableEntry(mgr, screenMgrOffsets.releaseModeMethod);
 	releaseModeMethod(mgr);
 	uint32_t level = unityMethods.GetRequestedDeviceLevel();
 	bool mustSwitchResolution = fullscreen && unityMethods.MustSwitchResolutionForFullscreenMode();
-	int unk1 = -1;
-	void *context = unityMethods.MakeNewContext(level, width, height, mustSwitchResolution, true, false, 2, &unk1, true);
-	if (context) {
+
+	void *context = NULL;
+	bool needsToMakeContext = UnityVersion < UNITY_VERSION_TATARI_OLD || *unityMethods.gRenderer != 0x10;
+
+	if (needsToMakeContext) {
+		int unk1 = -1;
+		context = unityMethods.MakeNewContext(level, width, height, mustSwitchResolution, true, false, 2, &unk1, true);
+	}
+	if (!needsToMakeContext || context) {
 		void *qualitySettings = unityMethods.GetQualitySettings();
 		int currentQualityIdx = *(int *)getField(qualitySettings, 0x44);
 		void *settingsVector = *(void **)getField(qualitySettings, 0x28);
 		int vSyncCount = *(int *)getField((char *)settingsVector + 0x60 * currentQualityIdx, 0x44);
 		unityMethods.SetSyncToVBL(context, vSyncCount);
 		if (mustSwitchResolution) {
-			unityMethods.ScreenMgrSetFullscreenResolutionRobustly(mgr, &width, &height, fullscreen, false, context);
+			if (needsToMakeContext) {
+				unityMethods.ScreenMgrSetFullscreenResolutionRobustly(mgr, &width, &height, fullscreen, false, context);
+			}
 		}
 		else {
 			CreateAndShowWindowReplacement(mgr, width, height, fullscreen);
 			PlayerWindowView *view = (__bridge PlayerWindowView *)*(void **)getField(mgr, PlayerWindowViewOffset);
-			[view setContext:*(CGLContextObj *)context];
+			if (needsToMakeContext) {
+				[view setContext:*(CGLContextObj *)context];
+			}
 			// Original binary only updates width and height in non-fullscreen, which causes weirdness with retina because then the ScreenManager height would be the retina height for non-fs windows and non-retina height for fs windows.
 			CGRect frame;
 			if (fullscreen) {

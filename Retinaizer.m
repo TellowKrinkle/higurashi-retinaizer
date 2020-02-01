@@ -18,8 +18,34 @@ static struct MethodsToReplace {
 	void (*ScreenMgrPreBlit)(void *);
 } methodsToReplace = {0};
 
+static struct ReplacementMethods {
+	void *InputReadMousePosition;
+	void *ScreenMgrGetMouseOrigin;
+	void *ScreenMgrGetMouseScale;
+	void *ScreenMgrSetResImmediate;
+	void *ScreenMgrCreateAndShowWindow;
+	void *ScreenMgrPreBlit;
+} replacementMethods = {
+	.InputReadMousePosition = ReadMousePosReplacement,
+	.ScreenMgrGetMouseOrigin = GetMouseOriginReplacement,
+	.ScreenMgrGetMouseScale = GetMouseScaleReplacement,
+	.ScreenMgrSetResImmediate = SetResImmediateReplacement,
+	.ScreenMgrCreateAndShowWindow = CreateAndShowWindowReplacement,
+	.ScreenMgrPreBlit = PreBlitReplacement,
+};
+
 struct UnityMethods unityMethods = {0};
 struct CPPMethods cppMethods = {0};
+
+struct ScreenManagerOffsets screenMgrOffsets = {
+	.getHeightMethod = 0xa8,
+	.isFullscreenMethod = 0xb8,
+	.releaseModeMethod = 0x100,
+};
+
+struct GfxDeviceOffsets gfxDevOffsets = {
+	.finishRenderingMethod = 0x3f0,
+};
 
 static const struct WantedFunction {
 	char *name;
@@ -60,6 +86,7 @@ static const struct WantedFunction {
 	{"__ZN10Matrix4x4f8SetOrthoEffffff", &unityMethods.Matrix4x4fSetOrtho},
 
 	{"_gDefaultFBOGL", &unityMethods.gDefaultFBOGL},
+	{"_g_Renderer", &unityMethods.gRenderer},
 	{"_g_PopUpWindow", &unityMethods.gPopUpWindow},
 	{"__ZN10Matrix4x4f8identityE", &unityMethods.identityMatrix},
 	{"__ZL14displayDevices", &unityMethods.displayDevices},
@@ -71,7 +98,14 @@ static const struct WantedFunction {
 	{"_mono_string_to_utf8", &cppMethods.mono_string_to_utf8},
 };
 
-# pragma mark - Symbol loading and replacement
+static const struct {
+	int version;
+	const char *name;
+} laterAddedFunctions[] = {
+	{UNITY_VERSION_TATARI_OLD, "_g_Renderer"},
+};
+
+# pragma mark - Symbol loading
 
 /// Search through the given symbol list to find pointers to functions
 ///
@@ -176,10 +210,21 @@ static void replaceFunction(void *oldFunction, void *newFunction) {
 	mprotect((void *)pageStart, end - pageStart, PROT_READ | PROT_EXEC);
 }
 
+#pragma mark - Unity version switching
+
 static bool verifyAllOffsetsWereFound() {
 	bool allFound = true;
 	for (int i = 0; i < sizeof(wantedFunctions) / sizeof(*wantedFunctions); i++) {
 		if (*(void **)wantedFunctions[i].target == NULL) {
+			// Check if it's known to have been added in a later game
+			bool isExpectedMissing = false;
+			for (int j = 0; j < sizeof(laterAddedFunctions) / sizeof(*laterAddedFunctions); j++) {
+				if (UnityVersion < laterAddedFunctions[j].version && strcmp(laterAddedFunctions[j].name, wantedFunctions[i].name) == 0) {
+					isExpectedMissing = true;
+				}
+			}
+			if (isExpectedMissing) { continue; }
+
 			fprintf(stderr, "libRetinaizer: Warning: %s was not found, not enabling retina!\n", wantedFunctions[i].name);
 			allFound = false;
 		}
@@ -187,8 +232,21 @@ static bool verifyAllOffsetsWereFound() {
 	return allFound;
 }
 
-static bool verifyUnityVersion(const char *version) {
+int UnityVersion = 0;
+
+static bool verifyAndConfigureForUnityVersion(const char *version) {
 	if (strcmp(version, "5.2.2f1") == 0) {
+		UnityVersion = UNITY_VERSION_ONI;
+		return true;
+	}
+	replacementMethods.ScreenMgrGetMouseOrigin = TatariGetMouseOriginReplacement;
+	replacementMethods.ScreenMgrGetMouseScale = TatariGetMouseScaleReplacement;
+	screenMgrOffsets.getHeightMethod = 0xb0;
+	screenMgrOffsets.isFullscreenMethod = 0xc0;
+	screenMgrOffsets.releaseModeMethod = 0x108;
+	gfxDevOffsets.finishRenderingMethod = 0x3e0;
+	if (strcmp(version, "5.3.4p1") == 0) {
+		UnityVersion = UNITY_VERSION_TATARI_OLD;
 		return true;
 	}
 	fprintf(stderr, "libRetinaizer: Unrecognized unity version %s, not enabling retina\n", version);
@@ -203,6 +261,8 @@ static char * getUnityVersion() {
 static bool isRetina = false;
 static const char *unityVersion = "unknown";
 
+#pragma mark - Mod initializer
+
 void goRetina() {
 	if (isRetina) { return; }
 	isRetina = true;
@@ -210,15 +270,15 @@ void goRetina() {
 	if (unityMethods.ApplicationGetCustomPropUnityVersion && cppMethods.mono_string_to_utf8) {
 		unityVersion = strdup(getUnityVersion());
 	}
-	bool unityVersionOkay = verifyUnityVersion(unityVersion);
+	bool unityVersionOkay = verifyAndConfigureForUnityVersion(unityVersion);
 	bool offsetsFound = verifyAllOffsetsWereFound();
 	if (!unityVersionOkay || !offsetsFound) { return; }
-	replaceFunction(methodsToReplace.ScreenMgrGetMouseOrigin, GetMouseOriginReplacement);
-	replaceFunction(methodsToReplace.InputReadMousePosition, ReadMousePosReplacement);
-	replaceFunction(methodsToReplace.ScreenMgrGetMouseScale, GetMouseScaleReplacement);
-	replaceFunction(methodsToReplace.ScreenMgrSetResImmediate, SetResImmediateReplacement);
-	replaceFunction(methodsToReplace.ScreenMgrCreateAndShowWindow, CreateAndShowWindowReplacement);
-	replaceFunction(methodsToReplace.ScreenMgrPreBlit, PreBlitReplacement);
+	replaceFunction(methodsToReplace.ScreenMgrGetMouseOrigin, replacementMethods.ScreenMgrGetMouseOrigin);
+	replaceFunction(methodsToReplace.InputReadMousePosition, replacementMethods.InputReadMousePosition);
+	replaceFunction(methodsToReplace.ScreenMgrGetMouseScale, replacementMethods.ScreenMgrGetMouseScale);
+	replaceFunction(methodsToReplace.ScreenMgrSetResImmediate, replacementMethods.ScreenMgrSetResImmediate);
+	replaceFunction(methodsToReplace.ScreenMgrCreateAndShowWindow, replacementMethods.ScreenMgrCreateAndShowWindow);
+	replaceFunction(methodsToReplace.ScreenMgrPreBlit, replacementMethods.ScreenMgrPreBlit);
 	method_setImplementation(class_getInstanceMethod(NSClassFromString(@"PlayerWindowDelegate"), @selector(windowDidResize:)), (IMP)WindowDidResizeReplacement);
 	dispatch_async(dispatch_get_main_queue(), ^{
 		NSApplication *app = [NSApplication sharedApplication];
