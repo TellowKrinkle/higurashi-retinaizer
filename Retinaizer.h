@@ -36,15 +36,18 @@ extern struct UnityMethods {
 	void (*SetSyncToVBL)(void *, int);
 	void (*PlayerPrefsSetInt)(StdString *, int);
 	void *(*MakeNewContext)(uint32_t, int, int, int, bool, bool, uint32_t, int *, bool);
+	void (*RenderTextureSetActive)(void *, int, int, unsigned int);
 	void (*RenderTextureReleaseAll)(void);
 	void (*DestroyMainContextGL)(void);
 	void (*GfxHelperDrawQuad)(void *, void *, bool, float, float);
+	bool (*ActivateGraphicsContext)(void *, bool, int);
 
 	CGDirectDisplayID (*ScreenMgrGetDisplayID)(void *);
 	void (*ScreenMgrWillChangeMode)(void *, IntVector *);
 	bool (*ScreenMgrSetFullscreenResolutionRobustly)(void *, int *, int *, int, bool, void *);
 	void (*ScreenMgrDidChangeScreenMode)(void *, int, int, int, void *, IntVector *);
 	void (*ScreenMgrSetupDownscaledFullscreenFBO)(void *, int, int);
+	void (*ScreenMgrRebindDefaultFramebuffer)(void *);
 
 	void (*Matrix4x4fSetOrtho)(Matrix4x4f *, float, float, float, float, float, float);
 
@@ -63,21 +66,37 @@ extern struct CPPMethods {
 	char *(*mono_string_to_utf8)(void *monoString);
 } cppMethods;
 
+// size is struct size, *Method are vtable offsets, others are struct offsets
+
 extern struct ScreenManagerOffsets {
 	size_t getHeightMethod;
 	size_t isFullscreenMethod;
 	size_t releaseModeMethod;
-	size_t windowOffset;
-	size_t playerWindowViewOffset;
-	size_t playerWindowDelegateOffset;
+	size_t window;
+	size_t playerWindowView;
+	size_t playerWindowDelegate;
+	size_t renderSurfaceA;
+	size_t renderSurfaceB;
 } screenMgrOffsets;
 
 extern struct GfxDeviceOffsets {
 	size_t finishRenderingMethod;
+	size_t setBackBufferColorDepthSurfaceMethod;
+	size_t deallocRenderSurfaceMethod;
 } gfxDevOffsets;
 
 extern struct PlayerSettingsOffsets {
 	size_t collectionBehaviorFlag;
 } playerSettingsOffsets;
+
+extern struct QualitySettingsOffsets {
+	size_t settingsVector;
+	size_t currentQuality;
+} qualitySettingsOffsets;
+
+extern struct QualitySettingOffsets {
+	size_t vSyncCount;
+	size_t size;
+} qualitySettingOffsets;
 
 #endif /* Retinaizer_h */

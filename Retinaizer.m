@@ -41,17 +41,31 @@ struct ScreenManagerOffsets screenMgrOffsets = {
 	.getHeightMethod = 0xa8,
 	.isFullscreenMethod = 0xb8,
 	.releaseModeMethod = 0x100,
-	.windowOffset = 0x70,
-	.playerWindowViewOffset = 0x78,
-	.playerWindowDelegateOffset = 0, // Not used in Onikakushi
+	.window = 0x70,
+	.playerWindowView = 0x78,
+	.playerWindowDelegate = 0, // Not used in Onikakushi
+	.renderSurfaceA = 0, // Not used in Onikakushi
+	.renderSurfaceB = 0, // Not used in Onikakushi
 };
 
 struct GfxDeviceOffsets gfxDevOffsets = {
 	.finishRenderingMethod = 0x3f0,
+	.setBackBufferColorDepthSurfaceMethod = 0, // Not used in Onikakushi
+	.deallocRenderSurfaceMethod = 0, // Not used in Onikakushi
 };
 
 struct PlayerSettingsOffsets playerSettingsOffsets = {
 	.collectionBehaviorFlag = 0xd4,
+};
+
+struct QualitySettingsOffsets qualitySettingsOffsets = {
+	.settingsVector = 0x28,
+	.currentQuality = 0x44,
+};
+
+struct QualitySettingOffsets qualitySettingOffsets = {
+	.vSyncCount = 0x44,
+	.size = 0x60,
 };
 
 static const struct WantedFunction {
@@ -79,9 +93,11 @@ static const struct WantedFunction {
 	{"__Z12SetSyncToVBL12ObjectHandleI19GraphicsContext_TagPvEi", &unityMethods.SetSyncToVBL},
 	{"__ZN11PlayerPrefs6SetIntERKSsi", &unityMethods.PlayerPrefsSetInt},
 	{"__Z14MakeNewContext16GfxDeviceLevelGLiiibb17DepthBufferFormatPib", &unityMethods.MakeNewContext},
+	{"__ZN13RenderTexture9SetActiveEPS_i11CubemapFacej", &unityMethods.RenderTextureSetActive},
 	{"__ZN13RenderTexture10ReleaseAllEv", &unityMethods.RenderTextureReleaseAll},
 	{"__Z20DestroyMainContextGLv", &unityMethods.DestroyMainContextGL},
 	{"__ZN14GraphicsHelper8DrawQuadER9GfxDevicePK14ChannelAssignsbff", &unityMethods.GfxHelperDrawQuad},
+	{"__Z23ActivateGraphicsContext12ObjectHandleI19GraphicsContext_TagPvEbi", &unityMethods.ActivateGraphicsContext},
 
 	{"__ZNK16ScreenManagerOSX12GetDisplayIDEv", &unityMethods.ScreenMgrGetDisplayID},
 	{"__ZN26ScreenManagerOSXStandalone13GetMouseScaleEv", &methodsToReplace.ScreenMgrGetMouseScale},
@@ -89,6 +105,7 @@ static const struct WantedFunction {
 	{"__ZN16ScreenManagerOSX31SetFullscreenResolutionRobustlyERiS0_ib12ObjectHandleI19GraphicsContext_TagPvE", &unityMethods.ScreenMgrSetFullscreenResolutionRobustly},
 	{"__ZN16ScreenManagerOSX19DidChangeScreenModeEiii12ObjectHandleI19GraphicsContext_TagPvERSt6vectorIiSaIiEE", &unityMethods.ScreenMgrDidChangeScreenMode},
 	{"__ZN26ScreenManagerOSXStandalone28SetupDownscaledFullscreenFBOEii", &unityMethods.ScreenMgrSetupDownscaledFullscreenFBO},
+	{"__ZN26ScreenManagerOSXStandalone24RebindDefaultFramebufferEv", &unityMethods.ScreenMgrRebindDefaultFramebuffer},
 
 	{"__ZN10Matrix4x4f8SetOrthoEffffff", &unityMethods.Matrix4x4fSetOrtho},
 
@@ -110,6 +127,7 @@ static const struct {
 	const char *name;
 } laterAddedFunctions[] = {
 	{UNITY_VERSION_TATARI_OLD, "_g_Renderer"},
+	{UNITY_VERSION_TATARI_OLD, "__ZN26ScreenManagerOSXStandalone24RebindDefaultFramebufferEv"},
 };
 
 # pragma mark - Symbol loading
@@ -159,6 +177,10 @@ static int64_t getFatOffset(FILE *file, const struct mach_header_64* target) {
 
 /// Reads pointers into `unityMethods`
 static void initializeUnity() {
+	static bool initializationDone = false;
+	if (initializationDone) { return; }
+	initializationDone = true;
+
 	const struct mach_header_64 *header = (struct mach_header_64 *)_dyld_get_image_header(0);
 	if (header->magic != MH_MAGIC_64) { abort(); }
 	intptr_t offset = _dyld_get_image_vmaddr_slide(0);
@@ -251,9 +273,14 @@ static bool verifyAndConfigureForUnityVersion(const char *version) {
 	screenMgrOffsets.getHeightMethod = 0xb0;
 	screenMgrOffsets.isFullscreenMethod = 0xc0;
 	screenMgrOffsets.releaseModeMethod = 0x108;
-	screenMgrOffsets.playerWindowDelegateOffset = 0x80;
+	screenMgrOffsets.playerWindowDelegate = 0x80;
+	screenMgrOffsets.renderSurfaceA = 0xc8;
+	screenMgrOffsets.renderSurfaceB = 0xd0;
 	gfxDevOffsets.finishRenderingMethod = 0x3e0;
+	gfxDevOffsets.setBackBufferColorDepthSurfaceMethod = 0x2f0;
+	gfxDevOffsets.deallocRenderSurfaceMethod = 0x308;
 	playerSettingsOffsets.collectionBehaviorFlag = 0xd8;
+	qualitySettingOffsets.size = 0x68;
 	if (strcmp(version, "5.3.4p1") == 0) {
 		UnityVersion = UNITY_VERSION_TATARI_OLD;
 		return true;
@@ -303,5 +330,6 @@ void goRetina() {
 
 __attribute__((constructor))
 void setupRetinaizer() {
+	initializeUnity();
 	dispatch_async_f(dispatch_get_main_queue(), NULL, goRetina);
 }
