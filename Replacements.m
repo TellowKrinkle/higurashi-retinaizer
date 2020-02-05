@@ -205,8 +205,10 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 	prefname = makeStdString("Screenmanager Is Fullscreen mode");
 	unityMethods.PlayerPrefsSetInt(&prefname, fullscreen);
 	destroyStdString(prefname);
-	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
+	if (needsToMakeContext) {
 		unityMethods.ScreenMgrDidChangeScreenMode(mgr, width, height, fullscreen, context, &modeVec);
+	}
+	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
 		*unityMethods.gDefaultFBOGL = 0;
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
@@ -229,9 +231,6 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 				unityMethods.ScreenMgrSetupDownscaledFullscreenFBO(mgr, width, height);
 			}
 		}
-	}
-	if (tatariGRendererCheck) {
-		unityMethods.ScreenMgrDidChangeScreenMode(mgr, width, height, fullscreen, context, &modeVec);
 	}
 	ret = true;
 cleanup:

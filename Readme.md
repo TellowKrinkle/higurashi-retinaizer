@@ -17,3 +17,5 @@ Copy the compiled `libRetinaizer.dylib` to `HigurashiGame.app/Contents/Framework
 To ease development and debugging, use of Xcode is recommended.
 
 Create a new Xcode project and select Library.  Then set the framework to Cocoa and the type to Dynamic.  Delete the `.h` and `.m` files it defaults to, and drag all the files into the Xcode file manager, making sure to uncheck `Copy items if needed`.  Build once, then use `ln -s` to make a soft link from the Xcode build product to install directory of the game you want to test with (path above in `Installation`).  Finally, add a new build scheme and edit the `Executable` to be the game you soft-linked the dylib into.  Now you can run with ⌘R and breakpoints will work as expected. 
+
+Note: Tatarigoroshi crashes on fullscreen and defullscreen when run under lldb (and therefore also when run through xcode).  Don't think that's due to the retinaizer and spend large amounts of time trying to debug it.
