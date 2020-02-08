@@ -5,6 +5,8 @@
 #import <Cocoa/Cocoa.h>
 #include "Retinaizer.h"
 #include "Replacements.h"
+#include "GameOffsets.h"
+#include "Offsets.h"
 #include <dlfcn.h>
 
 #pragma mark - Structs
@@ -38,34 +40,34 @@ struct UnityMethods unityMethods = {0};
 struct CPPMethods cppMethods = {0};
 
 struct ScreenManagerOffsets screenMgrOffsets = {
-	.getHeightMethod = 0xa8,
-	.isFullscreenMethod = 0xb8,
-	.releaseModeMethod = 0x100,
-	.window = 0x70,
-	.playerWindowView = 0x78,
-	.playerWindowDelegate = 0, // Not used in Onikakushi
-	.renderSurfaceA = 0, // Not used in Onikakushi
-	.renderSurfaceB = 0, // Not used in Onikakushi
+	.getHeightMethod = UNUSED_VALUE,
+	.isFullscreenMethod = UNUSED_VALUE,
+	.releaseModeMethod = UNUSED_VALUE,
+	.window = UNUSED_VALUE,
+	.playerWindowView = UNUSED_VALUE,
+	.playerWindowDelegate = UNUSED_VALUE,
+	.renderSurfaceA = UNUSED_VALUE,
+	.renderSurfaceB = UNUSED_VALUE,
 };
 
 struct GfxDeviceOffsets gfxDevOffsets = {
-	.finishRenderingMethod = 0x3f0,
-	.setBackBufferColorDepthSurfaceMethod = 0, // Not used in Onikakushi
-	.deallocRenderSurfaceMethod = 0, // Not used in Onikakushi
+	.finishRenderingMethod = UNUSED_VALUE,
+	.setBackBufferColorDepthSurfaceMethod = UNUSED_VALUE,
+	.deallocRenderSurfaceMethod = UNUSED_VALUE,
 };
 
 struct PlayerSettingsOffsets playerSettingsOffsets = {
-	.collectionBehaviorFlag = 0xd4,
+	.collectionBehaviorFlag = UNUSED_VALUE,
 };
 
 struct QualitySettingsOffsets qualitySettingsOffsets = {
-	.settingsVector = 0x28,
-	.currentQuality = 0x44,
+	.settingsVector = UNUSED_VALUE,
+	.currentQuality = UNUSED_VALUE,
 };
 
 struct QualitySettingOffsets qualitySettingOffsets = {
-	.vSyncCount = 0x44,
-	.size = 0x60,
+	.vSyncCount = UNUSED_VALUE,
+	.size = UNUSED_VALUE,
 };
 
 static const struct WantedFunction {
@@ -201,7 +203,7 @@ static void initializeUnity() {
 			fread(buf, 1, cmd->strsize, fd);
 			fclose(fd);
 
-			searchSyms((void *)(buf + cmd->strsize), cmd->nsyms, buf, offset);
+			searchSyms((const struct nlist_64 *)(buf + cmd->strsize), cmd->nsyms, buf, offset);
 
 			free(buf);
 		}
@@ -261,28 +263,26 @@ static bool verifyAllOffsetsWereFound() {
 	return allFound;
 }
 
+static void setUnity(const struct AllOffsets *offsets) {
+	screenMgrOffsets = offsets->screenManager;
+	gfxDevOffsets = offsets->gfxDevice;
+	playerSettingsOffsets = offsets->playerSettings;
+	qualitySettingsOffsets = offsets->qualitySettings;
+	qualitySettingOffsets = offsets->qualitySetting;
+	UnityVersion = offsets->unityVersion;
+}
+
 int UnityVersion = 0;
 
 static bool verifyAndConfigureForUnityVersion(const char *version) {
 	if (strcmp(version, "5.2.2f1") == 0) {
-		UnityVersion = UNITY_VERSION_ONI;
+		setUnity(&OnikakushiOffsets);
 		return true;
 	}
 	replacementMethods.ScreenMgrGetMouseOrigin = TatariGetMouseOriginReplacement;
 	replacementMethods.ScreenMgrGetMouseScale = TatariGetMouseScaleReplacement;
-	screenMgrOffsets.getHeightMethod = 0xb0;
-	screenMgrOffsets.isFullscreenMethod = 0xc0;
-	screenMgrOffsets.releaseModeMethod = 0x108;
-	screenMgrOffsets.playerWindowDelegate = 0x80;
-	screenMgrOffsets.renderSurfaceA = 0xc8;
-	screenMgrOffsets.renderSurfaceB = 0xd0;
-	gfxDevOffsets.finishRenderingMethod = 0x3e0;
-	gfxDevOffsets.setBackBufferColorDepthSurfaceMethod = 0x2f0;
-	gfxDevOffsets.deallocRenderSurfaceMethod = 0x308;
-	playerSettingsOffsets.collectionBehaviorFlag = 0xd8;
-	qualitySettingOffsets.size = 0x68;
 	if (strcmp(version, "5.3.4p1") == 0) {
-		UnityVersion = UNITY_VERSION_TATARI_OLD;
+		setUnity(&TatarigoroshiOldOffsets);
 		return true;
 	}
 	fprintf(stderr, "libRetinaizer: Unrecognized unity version %s, not enabling retina\n", version);
@@ -331,5 +331,5 @@ void goRetina() {
 __attribute__((constructor))
 void setupRetinaizer() {
 	initializeUnity();
-	dispatch_async_f(dispatch_get_main_queue(), NULL, goRetina);
+	dispatch_async_f(dispatch_get_main_queue(), NULL, (dispatch_function_t)goRetina);
 }

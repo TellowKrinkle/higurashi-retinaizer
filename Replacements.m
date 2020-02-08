@@ -1,4 +1,5 @@
 #include "Replacements.h"
+#include "Offsets.h"
 #include <OpenGL/glext.h>
 #include <OpenGL/gl.h>
 #include <Carbon/Carbon.h>
