@@ -4,14 +4,14 @@
 #include "Retinaizer.h"
 #include <stdbool.h>
 
-Pointf GetMouseOriginReplacement(void *mgr);
-Pointf *TatariGetMouseOriginReplacement(Pointf *output, void *mgr);
+Pointf GetMouseOriginReplacement(ScreenManager *mgr);
+Pointf *TatariGetMouseOriginReplacement(Pointf *output, ScreenManager *mgr);
 void ReadMousePosReplacement(void);
-Pointf GetMouseScaleReplacement(void *mgr);
-Pointf *TatariGetMouseScaleReplacement(Pointf *output, void *mgr);
-bool SetResImmediateReplacement(void *, int, int, bool, int);
-void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fullscreen);
-void PreBlitReplacement(void *mgr);
+Pointf GetMouseScaleReplacement(ScreenManager *mgr);
+Pointf *TatariGetMouseScaleReplacement(Pointf *output, ScreenManager *mgr);
+bool SetResImmediateReplacement(ScreenManager *, int, int, bool, int);
+void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, bool fullscreen);
+void PreBlitReplacement(ScreenManager *mgr);
 void WindowDidResizeReplacement(id<NSWindowDelegate> self, SEL sel, NSNotification * notification);
 
 #endif /* Replacements_h */

@@ -43,7 +43,7 @@ static NSScreen *screenForID(CGDirectDisplayID display) {
 // Note: All functions have checks of toggleFullScreen support disabled, since this should only run on retina (10.7+) macs
 // Higurashi games actually have an official minimum version of 10.11 so this isn't an issue, but if you plan to run this on a game that supports older macOS versions, add an @available check to goRetina.
 
-Pointf GetMouseOriginReplacement(void *mgr) {
+Pointf GetMouseOriginReplacement(ScreenManager *mgr) {
 	// Currently unmodified from the original, previously, when we overrode NSWindow contentRectForFrameRect we needed to modify this to undo that, but we no longer use that hack.
 	NSWindow *window = (__bridge NSWindow*)*(void **)getField(mgr, screenMgrOffsets.window);
 	if (window) {
@@ -58,7 +58,7 @@ Pointf GetMouseOriginReplacement(void *mgr) {
 	}
 }
 
-Pointf *TatariGetMouseOriginReplacement(Pointf *output, void *mgr) {
+Pointf *TatariGetMouseOriginReplacement(Pointf *output, ScreenManager *mgr) {
 	*output = GetMouseOriginReplacement(mgr);
 	return output;
 }
@@ -68,8 +68,8 @@ void ReadMousePosReplacement() {
 	CGPoint point = CGEventGetLocation(event);
 	CFRelease(event);
 
-	void *screenMgr = unityMethods.GetScreenManager();
-	char(*isFullscreenMethod)(void *) = getVtableEntry(screenMgr, screenMgrOffsets.isFullscreenMethod);
+	ScreenManager *screenMgr = unityMethods.GetScreenManager();
+	char(*isFullscreenMethod)(ScreenManager *) = getVtableEntry(screenMgr, screenMgrOffsets.isFullscreenMethod);
 	CGPoint origin;
 	if (isFullscreenMethod(screenMgr)) {
 		CGDirectDisplayID displayID = unityMethods.ScreenMgrGetDisplayID(screenMgr);
@@ -81,19 +81,19 @@ void ReadMousePosReplacement() {
 		origin = (CGPoint){ pt.x, pt.y };
 	}
 	// Note: the height from ScreenManager is in retina coordinates
-	int (*getHeightMethod)(void *) = getVtableEntry(screenMgr, screenMgrOffsets.getHeightMethod);
+	int (*getHeightMethod)(ScreenManager *) = getVtableEntry(screenMgr, screenMgrOffsets.getHeightMethod);
 	int windowHeight = getHeightMethod(screenMgr);
 	NSPoint windowRelative = { point.x - origin.x, point.y - origin.y };
 	NSWindow *window = (__bridge NSWindow *)*(void **)getField(screenMgr, screenMgrOffsets.window);
 	if (window) {
 		windowRelative = [window convertRectToBacking:(NSRect){windowRelative, NSZeroSize}].origin;
 	}
-	void *inputManager = unityMethods.GetInputManager();
+	InputManager *inputManager = unityMethods.GetInputManager();
 	Pointf *output = getField(inputManager, 0xb0);
 	*output = (Pointf){ windowRelative.x, windowHeight - windowRelative.y };
 }
 
-Pointf GetMouseScaleReplacement(void *mgr) {
+Pointf GetMouseScaleReplacement(ScreenManager *mgr) {
 	bool mustSwitch = unityMethods.MustSwitchResolutionForFullscreenMode();
 	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, screenMgrOffsets.window);
 	if (!mustSwitch && window) {
@@ -106,15 +106,15 @@ Pointf GetMouseScaleReplacement(void *mgr) {
 	return (Pointf){1, 1};
 }
 
-Pointf *TatariGetMouseScaleReplacement(Pointf *output, void *mgr) {
+Pointf *TatariGetMouseScaleReplacement(Pointf *output, ScreenManager *mgr) {
 	*output = GetMouseScaleReplacement(mgr);
 	return output;
 }
 
-bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscreen, int refreshRate) {
+bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool fullscreen, int refreshRate) {
 	bool ret = false;
-	void *gfxDevice = unityMethods.GetGfxDevice();
-	void (*finishRenderingMethod)(void *) = getVtableEntry(gfxDevice, gfxDevOffsets.finishRenderingMethod);
+	GfxDevice *gfxDevice = unityMethods.GetGfxDevice();
+	void (*finishRenderingMethod)(GfxDevice *) = getVtableEntry(gfxDevice, gfxDevOffsets.finishRenderingMethod);
 	finishRenderingMethod(gfxDevice);
 	bool isBatchMode = unityMethods.IsBatchMode();
 	if (isBatchMode) { return false; }
@@ -126,7 +126,7 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 	}
 	IntVector modeVec = {0};
 	unityMethods.ScreenMgrWillChangeMode(mgr, &modeVec);
-	void (*releaseModeMethod)(void *) = getVtableEntry(mgr, screenMgrOffsets.releaseModeMethod);
+	void (*releaseModeMethod)(ScreenManager *) = getVtableEntry(mgr, screenMgrOffsets.releaseModeMethod);
 	releaseModeMethod(mgr);
 	if (UnityVersion >= UNITY_VERSION_TATARI_OLD) {
 		// Onikakushi calls this later
@@ -143,9 +143,9 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 		int unk1 = -1;
 		context = unityMethods.MakeNewContext(level, width, height, mustSwitchResolution, true, false, 2, &unk1, true);
 		if (!context) { goto cleanup; }
-		void *qualitySettings = unityMethods.GetQualitySettings();
+		QualitySettings *qualitySettings = unityMethods.GetQualitySettings();
 		int currentQualityIdx = *(int *)getField(qualitySettings, qualitySettingsOffsets.currentQuality);
-		void *settingsVector = *(void **)getField(qualitySettings, qualitySettingsOffsets.settingsVector);
+		QualitySetting *settingsVector = *(void **)getField(qualitySettings, qualitySettingsOffsets.settingsVector);
 		int vSyncCount = *(int *)getField((char *)settingsVector + qualitySettingOffsets.size * currentQualityIdx, qualitySettingOffsets.vSyncCount);
 		unityMethods.SetSyncToVBL(context, vSyncCount);
 	}
@@ -183,11 +183,11 @@ bool SetResImmediateReplacement(void *mgr, int width, int height, bool fullscree
 	}
 	if (needsToMakeContext) {
 		if (UnityVersion >= UNITY_VERSION_TATARI_OLD && *unityMethods.gRenderer == 0x11 && *(void **)getField(mgr, screenMgrOffsets.renderSurfaceA) != 0) {
-			void *gfxDevice = unityMethods.GetGfxDevice();
-			void (*setBackBufferColorDepthSurface)(void *, void *, void *) = getVtableEntry(gfxDevice, gfxDevOffsets.setBackBufferColorDepthSurfaceMethod);
-			void (*deallocRenderSurface)(void *, void *) = getVtableEntry(gfxDevice, gfxDevOffsets.deallocRenderSurfaceMethod);
-			void **rsA = getField(mgr, screenMgrOffsets.renderSurfaceA);
-			void **rsB = getField(mgr, screenMgrOffsets.renderSurfaceB);
+			GfxDevice *gfxDevice = unityMethods.GetGfxDevice();
+			void (*setBackBufferColorDepthSurface)(GfxDevice *, RenderSurface *, RenderSurface *) = getVtableEntry(gfxDevice, gfxDevOffsets.setBackBufferColorDepthSurfaceMethod);
+			void (*deallocRenderSurface)(GfxDevice *, RenderSurface *) = getVtableEntry(gfxDevice, gfxDevOffsets.deallocRenderSurfaceMethod);
+			RenderSurface **rsA = getField(mgr, screenMgrOffsets.renderSurfaceA);
+			RenderSurface **rsB = getField(mgr, screenMgrOffsets.renderSurfaceB);
 			setBackBufferColorDepthSurface(gfxDevice, *rsA, *rsB);
 			deallocRenderSurface(gfxDevice, *rsA);
 			deallocRenderSurface(gfxDevice, *rsB);
@@ -253,8 +253,8 @@ static void newWindowOrigin(NSWindow *window, CGRect frame, CGRect displayBounds
 // Recenter window the first time this runs since the previous position was probably based on the wrong size
 static bool hasRunModdedCreateWindow = false;
 
-void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fullscreen) {
-	void *otherMgr = unityMethods.GetScreenManager();
+void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, bool fullscreen) {
+	ScreenManager *otherMgr = unityMethods.GetScreenManager();
 	CGDirectDisplayID display = unityMethods.ScreenMgrGetDisplayID(otherMgr);
 	NSScreen *screen = screenForID(display);
 	CGRect displayBounds = CGDisplayBounds(display);
@@ -330,7 +330,7 @@ void CreateAndShowWindowReplacement(void *mgr, int width, int height, bool fulls
 	}
 }
 
-void PreBlitReplacement(void *mgr) {
+void PreBlitReplacement(ScreenManager *mgr) {
 	int defaultFBOGL = *unityMethods.gDefaultFBOGL;
 	if (defaultFBOGL != 0) {
 		GLuint *framebuffer1 = getField(mgr, 0x84);
@@ -344,7 +344,7 @@ void PreBlitReplacement(void *mgr) {
 		}
 		*unityMethods.gDefaultFBOGL = 0;
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-		void *otherMgr = unityMethods.GetScreenManager();
+		ScreenManager *otherMgr = unityMethods.GetScreenManager();
 		CGDirectDisplayID display = unityMethods.ScreenMgrGetDisplayID(otherMgr);
 		CGRect bounds = CGDisplayBounds(display);
 		NSScreen *screen = screenForID(display);
@@ -353,10 +353,10 @@ void PreBlitReplacement(void *mgr) {
 		}
 		Matrix4x4f matrix;
 		unityMethods.Matrix4x4fSetOrtho(&matrix, 0, 1, 0, 1, -1, 100);
-		void *gfxDevice = unityMethods.GetRealGfxDevice();
-		void (*setProjectionMatrixMethod)(void *, Matrix4x4f *) = getVtableEntry(gfxDevice, 0xe0);
-		void (*setViewMatrixMethod)(void *, Matrix4x4f *) = getVtableEntry(gfxDevice, 0xd8);
-		void (*setViewportMethod)(void *, RectTInt *) = getVtableEntry(gfxDevice, 0x128);
+		GfxDevice *gfxDevice = unityMethods.GetRealGfxDevice();
+		void (*setProjectionMatrixMethod)(GfxDevice *, Matrix4x4f *) = getVtableEntry(gfxDevice, 0xe0);
+		void (*setViewMatrixMethod)(GfxDevice *, Matrix4x4f *) = getVtableEntry(gfxDevice, 0xd8);
+		void (*setViewportMethod)(GfxDevice *, RectTInt *) = getVtableEntry(gfxDevice, 0x128);
 		setProjectionMatrixMethod(gfxDevice, &matrix);
 		setViewMatrixMethod(gfxDevice, unityMethods.identityMatrix);
 		RectTInt viewport = {0, 0, bounds.size.width, bounds.size.height};
@@ -370,9 +370,9 @@ void WindowDidResizeReplacement(id<NSWindowDelegate> self, SEL sel, NSNotificati
 	NSWindow *window = (NSWindow *)[notification object];
 	CGRect rect = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
 	if (!([window styleMask] & NSWindowStyleMaskFullScreen)) {
-		void *mgr = unityMethods.GetScreenManager();
-		void (*requestResolutionMethod)(void *, int, int, bool, int) = getVtableEntry(mgr, 0x10);
-		bool (*isFullscreenMethod)(void *) = getVtableEntry(mgr, 0xb8);
+		ScreenManager *mgr = unityMethods.GetScreenManager();
+		void (*requestResolutionMethod)(ScreenManager *, int, int, bool, int) = getVtableEntry(mgr, 0x10);
+		bool (*isFullscreenMethod)(ScreenManager *) = getVtableEntry(mgr, 0xb8);
 		requestResolutionMethod(mgr, rect.size.width, rect.size.height, isFullscreenMethod(mgr), 0);
 	}
 }

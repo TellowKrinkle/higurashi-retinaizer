@@ -20,13 +20,21 @@ extern int UnityVersion;
 static const int UNITY_VERSION_ONI = 0x050202;
 static const int UNITY_VERSION_TATARI_OLD = 0x050304;
 
+typedef struct GfxDevice GfxDevice;
+typedef struct InputManager InputManager;
+typedef struct PlayerSettings PlayerSettings;
+typedef struct QualitySetting QualitySetting;
+typedef struct QualitySettings QualitySettings;
+typedef struct RenderSurface RenderSurface;
+typedef struct ScreenManager ScreenManager;
+
 extern struct UnityMethods {
-	void *(*GetScreenManager)(void);
-	void *(*GetInputManager)(void);
-	void *(*GetGfxDevice)(void);
-	void *(*GetQualitySettings)(void);
-	void *(*GetPlayerSettings)(void);
-	void *(*GetRealGfxDevice)(void);
+	ScreenManager *(*GetScreenManager)(void);
+	InputManager *(*GetInputManager)(void);
+	GfxDevice *(*GetGfxDevice)(void);
+	QualitySettings *(*GetQualitySettings)(void);
+	PlayerSettings *(*GetPlayerSettings)(void);
+	GfxDevice *(*GetRealGfxDevice)(void);
 	uint32_t (*GetRequestedDeviceLevel)(void);
 	bool (*IsBatchMode)(void);
 	bool (*MustSwitchResolutionForFullscreenMode)(void);
@@ -42,12 +50,12 @@ extern struct UnityMethods {
 	void (*GfxHelperDrawQuad)(void *, void *, bool, float, float);
 	bool (*ActivateGraphicsContext)(void *, bool, int);
 
-	CGDirectDisplayID (*ScreenMgrGetDisplayID)(void *);
-	void (*ScreenMgrWillChangeMode)(void *, IntVector *);
-	bool (*ScreenMgrSetFullscreenResolutionRobustly)(void *, int *, int *, int, bool, void *);
-	void (*ScreenMgrDidChangeScreenMode)(void *, int, int, int, void *, IntVector *);
-	void (*ScreenMgrSetupDownscaledFullscreenFBO)(void *, int, int);
-	void (*ScreenMgrRebindDefaultFramebuffer)(void *);
+	CGDirectDisplayID (*ScreenMgrGetDisplayID)(ScreenManager *);
+	void (*ScreenMgrWillChangeMode)(ScreenManager *, IntVector *);
+	bool (*ScreenMgrSetFullscreenResolutionRobustly)(ScreenManager *, int *, int *, int, bool, void *);
+	void (*ScreenMgrDidChangeScreenMode)(ScreenManager *, int, int, int, void *, IntVector *);
+	void (*ScreenMgrSetupDownscaledFullscreenFBO)(ScreenManager *, int, int);
+	void (*ScreenMgrRebindDefaultFramebuffer)(ScreenManager *);
 
 	void (*Matrix4x4fSetOrtho)(Matrix4x4f *, float, float, float, float, float, float);
 

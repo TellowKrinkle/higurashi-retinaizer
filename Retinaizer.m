@@ -220,6 +220,7 @@ static void initializeUnity() {
 }
 
 /// Modifies the function pointed to by `oldFunction` to immediately jump to `newFunction`
+__attribute__((noinline))
 static void replaceFunction(void *oldFunction, void *newFunction) {
 	// From http://thomasfinch.me/blog/2015/07/24/Hooking-C-Functions-At-Runtime.html
 	// Note: dlsym doesn't work on non-exported symbols which is why we're not using it
@@ -299,6 +300,17 @@ static const char *unityVersion = "unknown";
 
 #pragma mark - Mod initializer
 
+static void setupNSAppication(void *ignored) {
+	NSApplication *app = [NSApplication sharedApplication];
+	for (NSWindow *window in [app orderedWindows]) {
+		NSView *view = [window contentView];
+		if (![view isKindOfClass:NSClassFromString(@"PlayerWindowView")]) {
+			continue;
+		}
+		[view setWantsBestResolutionOpenGLSurface:YES];
+	}
+}
+
 void goRetina() {
 	if (isRetina) { return; }
 	isRetina = true;
@@ -316,16 +328,7 @@ void goRetina() {
 	replaceFunction(methodsToReplace.ScreenMgrCreateAndShowWindow, replacementMethods.ScreenMgrCreateAndShowWindow);
 	replaceFunction(methodsToReplace.ScreenMgrPreBlit, replacementMethods.ScreenMgrPreBlit);
 	method_setImplementation(class_getInstanceMethod(NSClassFromString(@"PlayerWindowDelegate"), @selector(windowDidResize:)), (IMP)WindowDidResizeReplacement);
-	dispatch_async(dispatch_get_main_queue(), ^{
-		NSApplication *app = [NSApplication sharedApplication];
-		for (NSWindow *window in [app orderedWindows]) {
-			NSView *view = [window contentView];
-			if (![view isKindOfClass:NSClassFromString(@"PlayerWindowView")]) {
-				continue;
-			}
-			[view setWantsBestResolutionOpenGLSurface:YES];
-		}
-	});
+	dispatch_async_f(dispatch_get_main_queue(), NULL, setupNSAppication);
 }
 
 __attribute__((constructor))
