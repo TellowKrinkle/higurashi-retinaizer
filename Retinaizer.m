@@ -70,6 +70,10 @@ struct QualitySettingOffsets qualitySettingOffsets = {
 	.size = UNUSED_VALUE,
 };
 
+struct InputManagerOffsets inputMgrOffsets = {
+	.mousePosition = UNUSED_VALUE,
+};
+
 static const struct WantedFunction {
 	char *name;
 	void *target;
@@ -270,6 +274,7 @@ static void setUnity(const struct AllOffsets *offsets) {
 	playerSettingsOffsets = offsets->playerSettings;
 	qualitySettingsOffsets = offsets->qualitySettings;
 	qualitySettingOffsets = offsets->qualitySetting;
+	inputMgrOffsets = offsets->inputManager;
 	UnityVersion = offsets->unityVersion;
 }
 

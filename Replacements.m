@@ -89,7 +89,7 @@ void ReadMousePosReplacement() {
 		windowRelative = [window convertRectToBacking:(NSRect){windowRelative, NSZeroSize}].origin;
 	}
 	InputManager *inputManager = unityMethods.GetInputManager();
-	Pointf *output = getField(inputManager, 0xb0);
+	Pointf *output = getField(inputManager, inputMgrOffsets.mousePosition);
 	*output = (Pointf){ windowRelative.x, windowHeight - windowRelative.y };
 }
 
@@ -99,8 +99,8 @@ Pointf GetMouseScaleReplacement(ScreenManager *mgr) {
 	if (!mustSwitch && window) {
 		// Added convertRectToBacking: for retina support
 		CGRect frame = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
-		int *width = getField(mgr, 0x64);
-		int *height = getField(mgr, 0x68);
+		int *width = getField(mgr, screenMgrOffsets.width);
+		int *height = getField(mgr, screenMgrOffsets.height);
 		return (Pointf){ *width / frame.size.width, *height / frame.size.height };
 	}
 	return (Pointf){1, 1};
@@ -175,7 +175,7 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 		width = frame.size.width;
 		height = frame.size.height;
 	}
-	bool *isFullscreen = getField(mgr, 0x23);
+	bool *isFullscreen = getField(mgr, screenMgrOffsets.isFullscreen);
 	*isFullscreen = fullscreen;
 	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
 		// Tatari+ calls this earlier
@@ -333,10 +333,10 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 void PreBlitReplacement(ScreenManager *mgr) {
 	int defaultFBOGL = *unityMethods.gDefaultFBOGL;
 	if (defaultFBOGL != 0) {
-		GLuint *framebuffer1 = getField(mgr, 0x84);
-		GLuint *framebuffer2 = getField(mgr, 0x8c);
-		GLint *width = getField(mgr, 0x64);
-		GLint *height = getField(mgr, 0x68);
+		GLuint *framebuffer1 = getField(mgr, screenMgrOffsets.framebufferA);
+		GLuint *framebuffer2 = getField(mgr, screenMgrOffsets.framebufferB);
+		GLint *width = getField(mgr, screenMgrOffsets.width);
+		GLint *height = getField(mgr, screenMgrOffsets.height);
 		if (*framebuffer2 != 0) {
 			glBindFramebufferEXT(GL_READ_FRAMEBUFFER, *framebuffer2);
 			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, *framebuffer1);
@@ -354,9 +354,9 @@ void PreBlitReplacement(ScreenManager *mgr) {
 		Matrix4x4f matrix;
 		unityMethods.Matrix4x4fSetOrtho(&matrix, 0, 1, 0, 1, -1, 100);
 		GfxDevice *gfxDevice = unityMethods.GetRealGfxDevice();
-		void (*setProjectionMatrixMethod)(GfxDevice *, Matrix4x4f *) = getVtableEntry(gfxDevice, 0xe0);
-		void (*setViewMatrixMethod)(GfxDevice *, Matrix4x4f *) = getVtableEntry(gfxDevice, 0xd8);
-		void (*setViewportMethod)(GfxDevice *, RectTInt *) = getVtableEntry(gfxDevice, 0x128);
+		void (*setProjectionMatrixMethod)(GfxDevice *, Matrix4x4f *) = getVtableEntry(gfxDevice, gfxDevOffsets.setProjectionMatrixMethod);
+		void (*setViewMatrixMethod)(GfxDevice *, Matrix4x4f *) = getVtableEntry(gfxDevice, gfxDevOffsets.setViewMatrixMethod);
+		void (*setViewportMethod)(GfxDevice *, RectTInt *) = getVtableEntry(gfxDevice, gfxDevOffsets.setViewportMethod);
 		setProjectionMatrixMethod(gfxDevice, &matrix);
 		setViewMatrixMethod(gfxDevice, unityMethods.identityMatrix);
 		RectTInt viewport = {0, 0, bounds.size.width, bounds.size.height};
@@ -371,8 +371,8 @@ void WindowDidResizeReplacement(id<NSWindowDelegate> self, SEL sel, NSNotificati
 	CGRect rect = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
 	if (!([window styleMask] & NSWindowStyleMaskFullScreen)) {
 		ScreenManager *mgr = unityMethods.GetScreenManager();
-		void (*requestResolutionMethod)(ScreenManager *, int, int, bool, int) = getVtableEntry(mgr, 0x10);
-		bool (*isFullscreenMethod)(ScreenManager *) = getVtableEntry(mgr, 0xb8);
+		void (*requestResolutionMethod)(ScreenManager *, int, int, bool, int) = getVtableEntry(mgr, screenMgrOffsets.requestResolutionMethod);
+		bool (*isFullscreenMethod)(ScreenManager *) = getVtableEntry(mgr, screenMgrOffsets.isFullscreenMethod);
 		requestResolutionMethod(mgr, rect.size.width, rect.size.height, isFullscreenMethod(mgr), 0);
 	}
 }

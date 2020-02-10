@@ -15,6 +15,7 @@ struct AllOffsets {
 	struct PlayerSettingsOffsets playerSettings;
 	struct QualitySettingsOffsets qualitySettings;
 	struct QualitySettingOffsets qualitySetting;
+	struct InputManagerOffsets inputManager;
 	int unityVersion;
 };
 
@@ -22,18 +23,27 @@ struct AllOffsets {
 
 static const struct AllOffsets OnikakushiOffsets = {
 	.screenManager = {
+		.requestResolutionMethod = 0x10,
 		.getHeightMethod = 0xa8,
 		.isFullscreenMethod = 0xb8,
 		.releaseModeMethod = 0x100,
 		.window = 0x70,
 		.playerWindowView = 0x78,
 		.playerWindowDelegate = UNUSED_VALUE,
+		.isFullscreen = 0x23,
+		.width = 0x64,
+		.height = 0x68,
+		.framebufferA = 0x84,
+		.framebufferB = 0x8c,
 		.renderSurfaceA = UNUSED_VALUE,
 		.renderSurfaceB = UNUSED_VALUE,
 	},
 	.gfxDevice = {
 		.finishRenderingMethod = 0x3f0,
 		.setBackBufferColorDepthSurfaceMethod = UNUSED_VALUE,
+		.setProjectionMatrixMethod = 0xe0,
+		.setViewMatrixMethod = 0xd8,
+		.setViewportMethod = 0x128,
 		.deallocRenderSurfaceMethod = UNUSED_VALUE,
 	},
 	.playerSettings = {
@@ -47,6 +57,9 @@ static const struct AllOffsets OnikakushiOffsets = {
 		.vSyncCount = 0x44,
 		.size = 0x60,
 	},
+	.inputManager = {
+		.mousePosition = 0xb0,
+	},
 	.unityVersion = UNITY_VERSION_ONI
 };
 
@@ -54,18 +67,27 @@ static const struct AllOffsets OnikakushiOffsets = {
 
 static const struct AllOffsets TatarigoroshiOldOffsets = {
 	.screenManager = {
+		.requestResolutionMethod = 0x10,
 		.getHeightMethod = 0xb0,
 		.isFullscreenMethod = 0xc0,
 		.releaseModeMethod = 0x108,
 		.window = 0x70,
 		.playerWindowView = 0x78,
 		.playerWindowDelegate = 0x80,
+		.isFullscreen = 0x23,
+		.width = 0x64,
+		.height = 0x68,
+		.framebufferA = 0x148,
+		.framebufferB = 0x154,
 		.renderSurfaceA = 0xc8,
 		.renderSurfaceB = 0xd0,
 	},
 	.gfxDevice = {
 		.finishRenderingMethod = 0x3e0,
 		.setBackBufferColorDepthSurfaceMethod = 0x2f0,
+		.setProjectionMatrixMethod = 0xe0,
+		.setViewMatrixMethod = 0xd8,
+		.setViewportMethod = 0x128,
 		.deallocRenderSurfaceMethod = 0x308,
 	},
 	.playerSettings = {
@@ -78,6 +100,9 @@ static const struct AllOffsets TatarigoroshiOldOffsets = {
 	.qualitySetting = {
 		.vSyncCount = 0x44,
 		.size = 0x68,
+	},
+	.inputManager = {
+		.mousePosition = 0xb0,
 	},
 	.unityVersion = UNITY_VERSION_TATARI_OLD
 };
