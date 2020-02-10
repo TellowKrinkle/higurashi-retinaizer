@@ -159,7 +159,10 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 		}
 	}
 	if (needsCreateAndShowWindow) {
-		CreateAndShowWindowReplacement(mgr, width, height, fullscreen);
+		@autoreleasepool {
+			// CreateAndShowWindow calls [NSWindow setFrame:display:animate:] which will autorelease the NSOpenGLContext in the PlayerWindowView if animate is `NO`.  The PlayerWindowView *really* wants its old NSOpenGLContext to be dealloc'd before it assigns the new NSOpenGLContext (otherwise blackscreen when the dealloc happens later).  Unity never encountered this because it always called with `animate:YES`.
+			CreateAndShowWindowReplacement(mgr, width, height, fullscreen);
+		}
 		PlayerWindowView *view = (__bridge PlayerWindowView *)*(void **)getField(mgr, screenMgrOffsets.playerWindowView);
 		if (needsToMakeContext) {
 			[view setContext:*(CGLContextObj *)context];
