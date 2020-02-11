@@ -5,30 +5,11 @@ typedef struct StdString {
 	char *c_str;
 } StdString;
 
-typedef struct Resolution {
-	int width;
-	int height;
-	int refreshRate;
-} Resolution;
-
-typedef struct ResolutionVector {
-	Resolution *begin;
-	Resolution *end;
-	Resolution *end_cap;
-} ResolutionVector;
-
 typedef struct IntVector {
 	int *begin;
 	int *end;
 	int *end_cap;
 } IntVector;
-
-typedef struct GraphicsContextGL {
-	void *cglContext;
-	uint64_t unk1;
-	uint32_t unk2;
-	bool unk3;
-} GraphicsContextGL;
 
 typedef struct RectTInt {
 	int x;
@@ -56,25 +37,6 @@ typedef struct Matrix4x4f {
 	float m33;
 } Matrix4x4f;
 static_assert(sizeof(Matrix4x4f) == 64, "Expected size of Matrix4x4f");
-
-struct DisplayDevice {
-	void *unk0;
-	CGDirectDisplayID displayID;
-	int index;
-	int width2;
-	int height2;
-	int width;
-	int height;
-	int x;
-	int y;
-	int xything;
-	int unk[10];
-	bool exists;
-	bool isActive;
-	bool isMainScreen;
-	bool field_0x57;
-};
-static_assert(sizeof(struct DisplayDevice) == 0x58, "Expected size of DisplayDevice");
 
 typedef struct GfxDevice GfxDevice;
 typedef struct InputManager InputManager;
