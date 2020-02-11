@@ -5,6 +5,9 @@
 
 #include "Offsets.h"
 
+inline AnyMemberOffset operator"" _i(unsigned long long n) { return AnyMemberOffset(n); }
+inline AnyVtableOffset operator"" _v(unsigned long long n) { return AnyVtableOffset(n); }
+
 struct AllOffsets {
 	struct ScreenManagerOffsets screenManager;
 	struct GfxDeviceOffsets gfxDevice;
@@ -19,37 +22,37 @@ struct AllOffsets {
 
 static const struct AllOffsets OnikakushiOffsets = {
 	.screenManager = {
-		.RequestResolution = 0x10,
-		.GetHeight = 0xa8,
-		.IsFullscreen = 0xb8,
-		.ReleaseMode = 0x100,
-		.window = 0x70,
-		.playerWindowView = 0x78,
-		.isFullscreen = 0x23,
-		.width = 0x64,
-		.height = 0x68,
-		.framebufferA = 0x84,
-		.framebufferB = 0x8c,
+		.RequestResolution = 0x10_v,
+		.GetHeight = 0xa8_v,
+		.IsFullscreen = 0xb8_v,
+		.ReleaseMode = 0x100_v,
+		.window = 0x70_i,
+		.playerWindowView = 0x78_i,
+		.isFullscreen = 0x23_i,
+		.width = 0x64_i,
+		.height = 0x68_i,
+		.framebufferA = 0x84_i,
+		.framebufferB = 0x8c_i,
 	},
 	.gfxDevice = {
-		.FinishRendering = 0x3f0,
-		.SetProjectionMatrix = 0xe0,
-		.SetViewMatrix = 0xd8,
-		.SetViewport = 0x128,
+		.FinishRendering = 0x3f0_v,
+		.SetProjectionMatrix = 0xe0_v,
+		.SetViewMatrix = 0xd8_v,
+		.SetViewport = 0x128_v,
 	},
 	.playerSettings = {
-		.collectionBehaviorFlag = 0xd4,
+		.collectionBehaviorFlag = 0xd4_i,
 	},
 	.qualitySettings = {
-		.settingsVector = 0x28,
-		.currentQuality = 0x44,
+		.settingsVector = 0x28_i,
+		.currentQuality = 0x44_i,
 	},
 	.qualitySetting = {
-		.vSyncCount = 0x44,
+		.vSyncCount = 0x44_i,
 		.size = 0x60,
 	},
 	.inputManager = {
-		.mousePosition = 0xb0,
+		.mousePosition = 0xb0_i,
 	},
 	.unityVersion = UNITY_VERSION_ONI
 };
@@ -58,42 +61,42 @@ static const struct AllOffsets OnikakushiOffsets = {
 
 static const struct AllOffsets TatarigoroshiOldOffsets = {
 	.screenManager = {
-		.RequestResolution = 0x10,
-		.GetHeight = 0xb0,
-		.IsFullscreen = 0xc0,
-		.ReleaseMode = 0x108,
-		.window = 0x70,
-		.playerWindowView = 0x78,
-		.playerWindowDelegate = 0x80,
-		.isFullscreen = 0x23,
-		.width = 0x64,
-		.height = 0x68,
-		.framebufferA = 0x148,
-		.framebufferB = 0x154,
-		.renderSurfaceA = 0xc8,
-		.renderSurfaceB = 0xd0,
+		.RequestResolution = 0x10_v,
+		.GetHeight = 0xb0_v,
+		.IsFullscreen = 0xc0_v,
+		.ReleaseMode = 0x108_v,
+		.window = 0x70_i,
+		.playerWindowView = 0x78_i,
+		.playerWindowDelegate = 0x80_i,
+		.isFullscreen = 0x23_i,
+		.width = 0x64_i,
+		.height = 0x68_i,
+		.framebufferA = 0x148_i,
+		.framebufferB = 0x154_i,
+		.renderSurfaceA = 0xc8_i,
+		.renderSurfaceB = 0xd0_i,
 	},
 	.gfxDevice = {
-		.FinishRendering = 0x3e0,
-		.SetBackBufferColorDepthSurface = 0x2f0,
-		.SetProjectionMatrix = 0xe0,
-		.SetViewMatrix = 0xd8,
-		.SetViewport = 0x128,
-		.DeallocRenderSurface = 0x308,
+		.FinishRendering = 0x3e0_v,
+		.SetBackBufferColorDepthSurface = 0x2f0_v,
+		.SetProjectionMatrix = 0xe0_v,
+		.SetViewMatrix = 0xd8_v,
+		.SetViewport = 0x128_v,
+		.DeallocRenderSurface = 0x308_v,
 	},
 	.playerSettings = {
-		.collectionBehaviorFlag = 0xd8,
+		.collectionBehaviorFlag = 0xd8_i,
 	},
 	.qualitySettings = {
-		.settingsVector = 0x28,
-		.currentQuality = 0x44,
+		.settingsVector = 0x28_i,
+		.currentQuality = 0x44_i,
 	},
 	.qualitySetting = {
-		.vSyncCount = 0x44,
+		.vSyncCount = 0x44_i,
 		.size = 0x68,
 	},
 	.inputManager = {
-		.mousePosition = 0xb0,
+		.mousePosition = 0xb0_i,
 	},
 	.unityVersion = UNITY_VERSION_TATARI_OLD
 };

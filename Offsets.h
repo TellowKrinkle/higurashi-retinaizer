@@ -11,12 +11,24 @@
 /// Set to a value that will most likely cause a crash if it does get used (since these are used as offsets, 0 will not cause a direct crash)
 static const size_t UNUSED_VALUE = 1UL << 48;
 
+struct AnyMemberOffset {
+	size_t offset;
+	inline explicit AnyMemberOffset(size_t _offset): offset(_offset) {}
+};
+struct AnyVtableOffset {
+	size_t offset;
+	inline explicit AnyVtableOffset(size_t _offset): offset(_offset) {}
+};
+
 /// An offset from a class to an instance variable in that class
 template<typename C, typename M>
 struct MemberOffset {
 	using Class = C;
 	using Member = M;
 	size_t offset = UNUSED_VALUE;
+
+	MemberOffset() = default;
+	inline /*implicit*/ MemberOffset(AnyMemberOffset off): offset(off.offset) {}
 
 	Member& apply(Class* c) const {
 		return *(Member*)(reinterpret_cast<unsigned char *>(c) + offset);
@@ -30,6 +42,9 @@ struct VtableOffset {
 	using Class = C;
 	using Function = Result(*)(Class*, Args...);
 	size_t offset = UNUSED_VALUE;
+
+	VtableOffset() = default;
+	inline /*implicit*/ VtableOffset(AnyVtableOffset off): offset(off.offset) {}
 
 	Result operator()(Class* c, Args... args) const {
 		return bind(c)(c, args...);
