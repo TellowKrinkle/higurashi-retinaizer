@@ -41,13 +41,11 @@ struct VtableOffset {
 	}
 };
 
-// size is struct size, *Method are vtable offsets, others are struct offsets
-
 extern struct ScreenManagerOffsets {
-	VtableOffset<ScreenManager, void, int, int, bool, int> requestResolutionMethod;
-	VtableOffset<ScreenManager, int> getHeightMethod;
-	VtableOffset<ScreenManager, int> isFullscreenMethod;
-	VtableOffset<ScreenManager, int> releaseModeMethod;
+	VtableOffset<ScreenManager, void, int, int, bool, int> RequestResolution;
+	VtableOffset<ScreenManager, int> GetHeight;
+	VtableOffset<ScreenManager, int> IsFullscreen;
+	VtableOffset<ScreenManager, int> ReleaseMode;
 	MemberOffset<ScreenManager, void*> window;
 	MemberOffset<ScreenManager, void*> playerWindowView;
 	MemberOffset<ScreenManager, void*> playerWindowDelegate;
@@ -61,12 +59,12 @@ extern struct ScreenManagerOffsets {
 } screenMgrOffsets;
 
 extern struct GfxDeviceOffsets {
-	VtableOffset<GfxDevice, void> finishRenderingMethod;
-	VtableOffset<GfxDevice, void, RenderSurface*, RenderSurface*> setBackBufferColorDepthSurfaceMethod;
-	VtableOffset<GfxDevice, void, Matrix4x4f*> setProjectionMatrixMethod;
-	VtableOffset<GfxDevice, void, Matrix4x4f*> setViewMatrixMethod;
-	VtableOffset<GfxDevice, void, RectTInt*> setViewportMethod;
-	VtableOffset<GfxDevice, void, RenderSurface*> deallocRenderSurfaceMethod;
+	VtableOffset<GfxDevice, void> FinishRendering;
+	VtableOffset<GfxDevice, void, RenderSurface*, RenderSurface*> SetBackBufferColorDepthSurface;
+	VtableOffset<GfxDevice, void, Matrix4x4f*> SetProjectionMatrix;
+	VtableOffset<GfxDevice, void, Matrix4x4f*> SetViewMatrix;
+	VtableOffset<GfxDevice, void, RectTInt*> SetViewport;
+	VtableOffset<GfxDevice, void, RenderSurface*> DeallocRenderSurface;
 } gfxDevOffsets;
 
 extern struct PlayerSettingsOffsets {

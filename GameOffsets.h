@@ -19,10 +19,10 @@ struct AllOffsets {
 
 static const struct AllOffsets OnikakushiOffsets = {
 	.screenManager = {
-		.requestResolutionMethod = 0x10,
-		.getHeightMethod = 0xa8,
-		.isFullscreenMethod = 0xb8,
-		.releaseModeMethod = 0x100,
+		.RequestResolution = 0x10,
+		.GetHeight = 0xa8,
+		.IsFullscreen = 0xb8,
+		.ReleaseMode = 0x100,
 		.window = 0x70,
 		.playerWindowView = 0x78,
 		.isFullscreen = 0x23,
@@ -32,10 +32,10 @@ static const struct AllOffsets OnikakushiOffsets = {
 		.framebufferB = 0x8c,
 	},
 	.gfxDevice = {
-		.finishRenderingMethod = 0x3f0,
-		.setProjectionMatrixMethod = 0xe0,
-		.setViewMatrixMethod = 0xd8,
-		.setViewportMethod = 0x128,
+		.FinishRendering = 0x3f0,
+		.SetProjectionMatrix = 0xe0,
+		.SetViewMatrix = 0xd8,
+		.SetViewport = 0x128,
 	},
 	.playerSettings = {
 		.collectionBehaviorFlag = 0xd4,
@@ -58,10 +58,10 @@ static const struct AllOffsets OnikakushiOffsets = {
 
 static const struct AllOffsets TatarigoroshiOldOffsets = {
 	.screenManager = {
-		.requestResolutionMethod = 0x10,
-		.getHeightMethod = 0xb0,
-		.isFullscreenMethod = 0xc0,
-		.releaseModeMethod = 0x108,
+		.RequestResolution = 0x10,
+		.GetHeight = 0xb0,
+		.IsFullscreen = 0xc0,
+		.ReleaseMode = 0x108,
 		.window = 0x70,
 		.playerWindowView = 0x78,
 		.playerWindowDelegate = 0x80,
@@ -74,12 +74,12 @@ static const struct AllOffsets TatarigoroshiOldOffsets = {
 		.renderSurfaceB = 0xd0,
 	},
 	.gfxDevice = {
-		.finishRenderingMethod = 0x3e0,
-		.setBackBufferColorDepthSurfaceMethod = 0x2f0,
-		.setProjectionMatrixMethod = 0xe0,
-		.setViewMatrixMethod = 0xd8,
-		.setViewportMethod = 0x128,
-		.deallocRenderSurfaceMethod = 0x308,
+		.FinishRendering = 0x3e0,
+		.SetBackBufferColorDepthSurface = 0x2f0,
+		.SetProjectionMatrix = 0xe0,
+		.SetViewMatrix = 0xd8,
+		.SetViewport = 0x128,
+		.DeallocRenderSurface = 0x308,
 	},
 	.playerSettings = {
 		.collectionBehaviorFlag = 0xd8,

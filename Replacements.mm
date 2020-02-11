@@ -67,7 +67,7 @@ void ReadMousePosReplacement() {
 
 	ScreenManager *screenMgr = unityMethods.GetScreenManager();
 	CGPoint origin;
-	if (screenMgrOffsets.isFullscreenMethod(screenMgr)) {
+	if (screenMgrOffsets.IsFullscreen(screenMgr)) {
 		CGDirectDisplayID displayID = unityMethods.ScreenMgrGetDisplayID(screenMgr);
 		origin = CGDisplayBounds(displayID).origin;
 		// Original binary gets mouse scale and multiplies by it.  In macOS, mouse coordinates are in display points, as are window positions, so multiplying by mouse scale would break things rather than fixing things.
@@ -77,7 +77,7 @@ void ReadMousePosReplacement() {
 		origin = (CGPoint){ pt.x, pt.y };
 	}
 	// Note: the height from ScreenManager is in retina coordinates
-	int windowHeight = screenMgrOffsets.getHeightMethod(screenMgr);
+	int windowHeight = screenMgrOffsets.GetHeight(screenMgr);
 	NSPoint windowRelative = { point.x - origin.x, point.y - origin.y };
 	NSWindow *window = (__bridge NSWindow *)screenMgrOffsets.window.apply(screenMgr);
 	if (window) {
@@ -108,7 +108,7 @@ Pointf *TatariGetMouseScaleReplacement(Pointf *output, ScreenManager *mgr) {
 
 bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool fullscreen, int refreshRate) {
 	GfxDevice *gfxDevice = unityMethods.GetGfxDevice();
-	gfxDevOffsets.finishRenderingMethod(gfxDevice);
+	gfxDevOffsets.FinishRendering(gfxDevice);
 	bool isBatchMode = unityMethods.IsBatchMode();
 	if (isBatchMode) { return false; }
 	NSWindow *window = (__bridge NSWindow *)screenMgrOffsets.window.apply(mgr);
@@ -124,7 +124,7 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 		}
 	});
 	unityMethods.ScreenMgrWillChangeMode(mgr, &modeVec);
-	screenMgrOffsets.releaseModeMethod(mgr);
+	screenMgrOffsets.ReleaseMode(mgr);
 	if (UnityVersion >= UNITY_VERSION_TATARI_OLD) {
 		// Onikakushi calls this later
 		unityMethods.RenderTextureReleaseAll();
@@ -185,9 +185,9 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 			GfxDevice *gfxDevice = unityMethods.GetGfxDevice();
 			RenderSurface **rsA = &screenMgrOffsets.renderSurfaceA.apply(mgr);
 			RenderSurface **rsB = &screenMgrOffsets.renderSurfaceB.apply(mgr);
-			gfxDevOffsets.setBackBufferColorDepthSurfaceMethod(gfxDevice, *rsA, *rsB);
-			gfxDevOffsets.deallocRenderSurfaceMethod(gfxDevice, *rsA);
-			gfxDevOffsets.deallocRenderSurfaceMethod(gfxDevice, *rsB);
+			gfxDevOffsets.SetBackBufferColorDepthSurface(gfxDevice, *rsA, *rsB);
+			gfxDevOffsets.DeallocRenderSurface(gfxDevice, *rsA);
+			gfxDevOffsets.DeallocRenderSurface(gfxDevice, *rsB);
 			*rsA = *rsB = nullptr;
 			unityMethods.RenderTextureSetActive(NULL, 0, -1, 0x10);
 		}
@@ -347,10 +347,10 @@ void PreBlitReplacement(ScreenManager *mgr) {
 		Matrix4x4f matrix;
 		unityMethods.Matrix4x4fSetOrtho(&matrix, 0, 1, 0, 1, -1, 100);
 		GfxDevice *gfxDevice = unityMethods.GetRealGfxDevice();
-		gfxDevOffsets.setProjectionMatrixMethod(gfxDevice, &matrix);
-		gfxDevOffsets.setViewMatrixMethod(gfxDevice, unityMethods.identityMatrix);
+		gfxDevOffsets.SetProjectionMatrix(gfxDevice, &matrix);
+		gfxDevOffsets.SetViewMatrix(gfxDevice, unityMethods.identityMatrix);
 		RectTInt viewport = {0, 0, (int)bounds.size.width, (int)bounds.size.height};
-		gfxDevOffsets.setViewportMethod(gfxDevice, &viewport);
+		gfxDevOffsets.SetViewport(gfxDevice, &viewport);
 		unityMethods.GfxHelperDrawQuad(gfxDevice, NULL, false, 1, 1);
 		*unityMethods.gDefaultFBOGL = defaultFBOGL;
 	}
@@ -361,7 +361,7 @@ void WindowDidResizeReplacement(id<NSWindowDelegate> self, SEL sel, NSNotificati
 	CGRect rect = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
 	if (!([window styleMask] & NSWindowStyleMaskFullScreen)) {
 		ScreenManager *mgr = unityMethods.GetScreenManager();
-		bool isFullscreen = screenMgrOffsets.isFullscreenMethod(mgr);
-		screenMgrOffsets.requestResolutionMethod(mgr, rect.size.width, rect.size.height, isFullscreen, 0);
+		bool isFullscreen = screenMgrOffsets.IsFullscreen(mgr);
+		screenMgrOffsets.RequestResolution(mgr, rect.size.width, rect.size.height, isFullscreen, 0);
 	}
 }
