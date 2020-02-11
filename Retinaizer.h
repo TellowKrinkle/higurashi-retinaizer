@@ -20,14 +20,6 @@ extern int UnityVersion;
 static const int UNITY_VERSION_ONI = 0x050202;
 static const int UNITY_VERSION_TATARI_OLD = 0x050304;
 
-typedef struct GfxDevice GfxDevice;
-typedef struct InputManager InputManager;
-typedef struct PlayerSettings PlayerSettings;
-typedef struct QualitySetting QualitySetting;
-typedef struct QualitySettings QualitySettings;
-typedef struct RenderSurface RenderSurface;
-typedef struct ScreenManager ScreenManager;
-
 extern struct UnityMethods {
 	ScreenManager *(*GetScreenManager)(void);
 	InputManager *(*GetInputManager)(void);

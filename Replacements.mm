@@ -1,18 +1,15 @@
 #include "Replacements.h"
 #include "Offsets.h"
+#include "Finally.h"
 #include <OpenGL/glext.h>
 #include <OpenGL/gl.h>
 #include <Carbon/Carbon.h>
 
 #pragma mark - Helpers
 
-static void *getVtableEntry(void *object, size_t offset) {
-	void **vtable = *(void **)object;
-	return *(vtable + offset / sizeof(void *));
-}
-
-static void *getField(void *object, size_t offset) {
-	return (char *)object + offset;
+template <typename T>
+T* arrayOffset(T* array, size_t itemSize, int index) {
+	return reinterpret_cast<T*>(reinterpret_cast<unsigned char *>(array) + itemSize * index);
 }
 
 static StdString makeStdString(const char *str) {
@@ -45,12 +42,12 @@ static NSScreen *screenForID(CGDirectDisplayID display) {
 
 Pointf GetMouseOriginReplacement(ScreenManager *mgr) {
 	// Currently unmodified from the original, previously, when we overrode NSWindow contentRectForFrameRect we needed to modify this to undo that, but we no longer use that hack.
-	NSWindow *window = (__bridge NSWindow*)*(void **)getField(mgr, screenMgrOffsets.window);
+	NSWindow *window = (__bridge NSWindow*)screenMgrOffsets.window.apply(mgr);
 	if (window) {
 		CGRect contentRect = [window contentRectForFrameRect:[window frame]];
 		NSScreen *screen = [[NSScreen screens] objectAtIndex:0];
 		double height = [screen frame].size.height;
-		Pointf ret = (Pointf){contentRect.origin.x, height - contentRect.origin.y - contentRect.size.height};
+		Pointf ret = {(float)contentRect.origin.x, (float)(height - contentRect.origin.y - contentRect.size.height)};
 		return ret;
 	}
 	else {
@@ -69,9 +66,8 @@ void ReadMousePosReplacement() {
 	CFRelease(event);
 
 	ScreenManager *screenMgr = unityMethods.GetScreenManager();
-	char(*isFullscreenMethod)(ScreenManager *) = getVtableEntry(screenMgr, screenMgrOffsets.isFullscreenMethod);
 	CGPoint origin;
-	if (isFullscreenMethod(screenMgr)) {
+	if (screenMgrOffsets.isFullscreenMethod(screenMgr)) {
 		CGDirectDisplayID displayID = unityMethods.ScreenMgrGetDisplayID(screenMgr);
 		origin = CGDisplayBounds(displayID).origin;
 		// Original binary gets mouse scale and multiplies by it.  In macOS, mouse coordinates are in display points, as are window positions, so multiplying by mouse scale would break things rather than fixing things.
@@ -81,27 +77,26 @@ void ReadMousePosReplacement() {
 		origin = (CGPoint){ pt.x, pt.y };
 	}
 	// Note: the height from ScreenManager is in retina coordinates
-	int (*getHeightMethod)(ScreenManager *) = getVtableEntry(screenMgr, screenMgrOffsets.getHeightMethod);
-	int windowHeight = getHeightMethod(screenMgr);
+	int windowHeight = screenMgrOffsets.getHeightMethod(screenMgr);
 	NSPoint windowRelative = { point.x - origin.x, point.y - origin.y };
-	NSWindow *window = (__bridge NSWindow *)*(void **)getField(screenMgr, screenMgrOffsets.window);
+	NSWindow *window = (__bridge NSWindow *)screenMgrOffsets.window.apply(screenMgr);
 	if (window) {
 		windowRelative = [window convertRectToBacking:(NSRect){windowRelative, NSZeroSize}].origin;
 	}
 	InputManager *inputManager = unityMethods.GetInputManager();
-	Pointf *output = getField(inputManager, inputMgrOffsets.mousePosition);
-	*output = (Pointf){ windowRelative.x, windowHeight - windowRelative.y };
+	Pointf *output = &inputMgrOffsets.mousePosition.apply(inputManager);
+	*output = { (float)windowRelative.x, (float)(windowHeight - windowRelative.y) };
 }
 
 Pointf GetMouseScaleReplacement(ScreenManager *mgr) {
 	bool mustSwitch = unityMethods.MustSwitchResolutionForFullscreenMode();
-	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, screenMgrOffsets.window);
+	NSWindow *window = (__bridge NSWindow *)screenMgrOffsets.window.apply(mgr);
 	if (!mustSwitch && window) {
 		// Added convertRectToBacking: for retina support
 		CGRect frame = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
-		int *width = getField(mgr, screenMgrOffsets.width);
-		int *height = getField(mgr, screenMgrOffsets.height);
-		return (Pointf){ *width / frame.size.width, *height / frame.size.height };
+		int width = screenMgrOffsets.width.apply(mgr);
+		int height = screenMgrOffsets.height.apply(mgr);
+		return { (float)(width / frame.size.width), (float)(height / frame.size.height) };
 	}
 	return (Pointf){1, 1};
 }
@@ -112,22 +107,24 @@ Pointf *TatariGetMouseScaleReplacement(Pointf *output, ScreenManager *mgr) {
 }
 
 bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool fullscreen, int refreshRate) {
-	bool ret = false;
 	GfxDevice *gfxDevice = unityMethods.GetGfxDevice();
-	void (*finishRenderingMethod)(GfxDevice *) = getVtableEntry(gfxDevice, gfxDevOffsets.finishRenderingMethod);
-	finishRenderingMethod(gfxDevice);
+	gfxDevOffsets.finishRenderingMethod(gfxDevice);
 	bool isBatchMode = unityMethods.IsBatchMode();
 	if (isBatchMode) { return false; }
-	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, screenMgrOffsets.window);
+	NSWindow *window = (__bridge NSWindow *)screenMgrOffsets.window.apply(mgr);
 	if ((([window styleMask] & NSWindowStyleMaskFullScreen) != 0) != fullscreen) {
 		[window toggleFullScreen:NULL];
 		// The original binary doesn't do this, but when defullscreening with the green window button, this method is called with fullscreen still true.  This causes toggleFullScreen to do nothing (because it's already happening) and messes up later code which assumes the fullscreen variable corresponds to the state of the window.
 		fullscreen = [window styleMask] & NSWindowStyleMaskFullScreen;
 	}
 	IntVector modeVec = {0};
+	auto modeVecCleanup = finally([&modeVec]() {
+		if (modeVec.begin != NULL) {
+			cppMethods.operatorDelete(modeVec.begin);
+		}
+	});
 	unityMethods.ScreenMgrWillChangeMode(mgr, &modeVec);
-	void (*releaseModeMethod)(ScreenManager *) = getVtableEntry(mgr, screenMgrOffsets.releaseModeMethod);
-	releaseModeMethod(mgr);
+	screenMgrOffsets.releaseModeMethod(mgr);
 	if (UnityVersion >= UNITY_VERSION_TATARI_OLD) {
 		// Onikakushi calls this later
 		unityMethods.RenderTextureReleaseAll();
@@ -142,11 +139,11 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 	if (needsToMakeContext) {
 		int unk1 = -1;
 		context = unityMethods.MakeNewContext(level, width, height, mustSwitchResolution, true, false, 2, &unk1, true);
-		if (!context) { goto cleanup; }
+		if (!context) { return false; }
 		QualitySettings *qualitySettings = unityMethods.GetQualitySettings();
-		int currentQualityIdx = *(int *)getField(qualitySettings, qualitySettingsOffsets.currentQuality);
-		QualitySetting *settingsVector = *(void **)getField(qualitySettings, qualitySettingsOffsets.settingsVector);
-		int vSyncCount = *(int *)getField((char *)settingsVector + qualitySettingOffsets.size * currentQualityIdx, qualitySettingOffsets.vSyncCount);
+		int currentQualityIdx = qualitySettingsOffsets.currentQuality.apply(qualitySettings);
+		QualitySetting *settingsVector = qualitySettingsOffsets.settingsVector.apply(qualitySettings);
+		int vSyncCount = qualitySettingOffsets.vSyncCount.apply(arrayOffset(settingsVector, qualitySettingOffsets.size, currentQualityIdx));
 		unityMethods.SetSyncToVBL(context, vSyncCount);
 	}
 
@@ -163,7 +160,7 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 			// CreateAndShowWindow calls [NSWindow setFrame:display:animate:] which will autorelease the NSOpenGLContext in the PlayerWindowView if animate is `NO`.  The PlayerWindowView *really* wants its old NSOpenGLContext to be dealloc'd before it assigns the new NSOpenGLContext (otherwise blackscreen when the dealloc happens later).  Unity never encountered this because it always called with `animate:YES`.
 			CreateAndShowWindowReplacement(mgr, width, height, fullscreen);
 		}
-		PlayerWindowView *view = (__bridge PlayerWindowView *)*(void **)getField(mgr, screenMgrOffsets.playerWindowView);
+		PlayerWindowView *view = (__bridge PlayerWindowView *)screenMgrOffsets.playerWindowView.apply(mgr);
 		if (needsToMakeContext) {
 			[view setContext:*(CGLContextObj *)context];
 		}
@@ -178,23 +175,20 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 		width = frame.size.width;
 		height = frame.size.height;
 	}
-	bool *isFullscreen = getField(mgr, screenMgrOffsets.isFullscreen);
-	*isFullscreen = fullscreen;
+	screenMgrOffsets.isFullscreen.apply(mgr) = fullscreen;
 	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
 		// Tatari+ calls this earlier
 		unityMethods.RenderTextureReleaseAll();
 	}
 	if (needsToMakeContext) {
-		if (UnityVersion >= UNITY_VERSION_TATARI_OLD && *unityMethods.gRenderer == 0x11 && *(void **)getField(mgr, screenMgrOffsets.renderSurfaceA) != 0) {
+		if (UnityVersion >= UNITY_VERSION_TATARI_OLD && *unityMethods.gRenderer == 0x11 && screenMgrOffsets.renderSurfaceA.apply(mgr) != nullptr) {
 			GfxDevice *gfxDevice = unityMethods.GetGfxDevice();
-			void (*setBackBufferColorDepthSurface)(GfxDevice *, RenderSurface *, RenderSurface *) = getVtableEntry(gfxDevice, gfxDevOffsets.setBackBufferColorDepthSurfaceMethod);
-			void (*deallocRenderSurface)(GfxDevice *, RenderSurface *) = getVtableEntry(gfxDevice, gfxDevOffsets.deallocRenderSurfaceMethod);
-			RenderSurface **rsA = getField(mgr, screenMgrOffsets.renderSurfaceA);
-			RenderSurface **rsB = getField(mgr, screenMgrOffsets.renderSurfaceB);
-			setBackBufferColorDepthSurface(gfxDevice, *rsA, *rsB);
-			deallocRenderSurface(gfxDevice, *rsA);
-			deallocRenderSurface(gfxDevice, *rsB);
-			*rsA = *rsB = NULL;
+			RenderSurface **rsA = &screenMgrOffsets.renderSurfaceA.apply(mgr);
+			RenderSurface **rsB = &screenMgrOffsets.renderSurfaceB.apply(mgr);
+			gfxDevOffsets.setBackBufferColorDepthSurfaceMethod(gfxDevice, *rsA, *rsB);
+			gfxDevOffsets.deallocRenderSurfaceMethod(gfxDevice, *rsA);
+			gfxDevOffsets.deallocRenderSurfaceMethod(gfxDevice, *rsB);
+			*rsA = *rsB = nullptr;
 			unityMethods.RenderTextureSetActive(NULL, 0, -1, 0x10);
 		}
 		unityMethods.DestroyMainContextGL();
@@ -236,12 +230,7 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 			}
 		}
 	}
-	ret = true;
-cleanup:
-	if (modeVec.begin != NULL) {
-		cppMethods.operatorDelete(modeVec.begin);
-	}
-	return ret;
+	return true;
 };
 
 static void newWindowOrigin(NSWindow *window, CGRect frame, CGRect displayBounds) {
@@ -261,11 +250,11 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 	CGDirectDisplayID display = unityMethods.ScreenMgrGetDisplayID(otherMgr);
 	NSScreen *screen = screenForID(display);
 	CGRect displayBounds = CGDisplayBounds(display);
-	CGRect bounds = (CGRect){CGPointZero, {width, height}};
+	CGRect bounds = {CGPointZero, {(CGFloat)width, (CGFloat)height}};
 	if (screen) {
 		bounds = [screen convertRectFromBacking:bounds];
 	}
-	NSWindow *window = (__bridge NSWindow *)*(void **)getField(mgr, screenMgrOffsets.window);
+	NSWindow *window = (__bridge NSWindow *)screenMgrOffsets.window.apply(mgr);
 	if (!window) {
 		bool resizable = unityMethods.AllowResizableWindow();
 		NSWindowStyleMask style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable;
@@ -273,12 +262,12 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 			style |= NSWindowStyleMaskResizable;
 		}
 		window = [[NSWindow alloc] initWithContentRect:bounds styleMask:style backing:NSBackingStoreBuffered defer:YES];
-		*(void **)getField(mgr, screenMgrOffsets.window) = (void *)CFBridgingRetain(window);
+		screenMgrOffsets.window.apply(mgr) = (void *)CFBridgingRetain(window);
 		[window setAcceptsMouseMovedEvents:YES];
 		id windowDelegate = [NSClassFromString(@"PlayerWindowDelegate") alloc];
 		if (UnityVersion >= UNITY_VERSION_TATARI_OLD) {
 			windowDelegate = [windowDelegate init];
-			*(void **)getField(mgr, screenMgrOffsets.playerWindowDelegate) = (void *)CFBridgingRetain(windowDelegate);
+			screenMgrOffsets.playerWindowDelegate.apply(mgr) = (void *)CFBridgingRetain(windowDelegate);
 		}
 		[window setDelegate:windowDelegate];
 		[window setBackgroundColor:[NSColor blackColor]];
@@ -286,7 +275,7 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 			[window setStyleMask:resizable ? NSWindowStyleMaskResizable : 0];
 		}
 		PlayerWindowView *view = [[NSClassFromString(@"PlayerWindowView") alloc] initWithFrame:bounds];
-		*(void **)getField(mgr, screenMgrOffsets.playerWindowView) = (void *)CFBridgingRetain(view);
+		screenMgrOffsets.playerWindowView.apply(mgr) = (void *)CFBridgingRetain(view);
 		[window setContentView:view];
 		[window makeFirstResponder:view];
 		newWindowOrigin(window, [window frame], displayBounds);
@@ -314,8 +303,9 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 		}
 	}
 	hasRunModdedCreateWindow = true;
-	int *flag = getField(unityMethods.GetPlayerSettings(), playerSettingsOffsets.collectionBehaviorFlag);
-	if (*flag == 2) {
+
+	int flag = playerSettingsOffsets.collectionBehaviorFlag.apply(unityMethods.GetPlayerSettings());
+	if (flag == 2) {
 		[window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
 	}
 	else {
@@ -336,14 +326,14 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 void PreBlitReplacement(ScreenManager *mgr) {
 	int defaultFBOGL = *unityMethods.gDefaultFBOGL;
 	if (defaultFBOGL != 0) {
-		GLuint *framebuffer1 = getField(mgr, screenMgrOffsets.framebufferA);
-		GLuint *framebuffer2 = getField(mgr, screenMgrOffsets.framebufferB);
-		GLint *width = getField(mgr, screenMgrOffsets.width);
-		GLint *height = getField(mgr, screenMgrOffsets.height);
-		if (*framebuffer2 != 0) {
-			glBindFramebufferEXT(GL_READ_FRAMEBUFFER, *framebuffer2);
-			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, *framebuffer1);
-			glBlitFramebufferEXT(0, 0, *width, *height, 0, 0, *width, *height, 0x4000, GL_NEAREST);
+		GLuint framebuffer1 = screenMgrOffsets.framebufferA.apply(mgr);
+		GLuint framebuffer2 = screenMgrOffsets.framebufferB.apply(mgr);
+		GLint width = screenMgrOffsets.width.apply(mgr);
+		GLint height = screenMgrOffsets.height.apply(mgr);
+		if (framebuffer2 != 0) {
+			glBindFramebufferEXT(GL_READ_FRAMEBUFFER, framebuffer2);
+			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, framebuffer1);
+			glBlitFramebufferEXT(0, 0, width, height, 0, 0, width, height, 0x4000, GL_NEAREST);
 		}
 		*unityMethods.gDefaultFBOGL = 0;
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -357,13 +347,10 @@ void PreBlitReplacement(ScreenManager *mgr) {
 		Matrix4x4f matrix;
 		unityMethods.Matrix4x4fSetOrtho(&matrix, 0, 1, 0, 1, -1, 100);
 		GfxDevice *gfxDevice = unityMethods.GetRealGfxDevice();
-		void (*setProjectionMatrixMethod)(GfxDevice *, Matrix4x4f *) = getVtableEntry(gfxDevice, gfxDevOffsets.setProjectionMatrixMethod);
-		void (*setViewMatrixMethod)(GfxDevice *, Matrix4x4f *) = getVtableEntry(gfxDevice, gfxDevOffsets.setViewMatrixMethod);
-		void (*setViewportMethod)(GfxDevice *, RectTInt *) = getVtableEntry(gfxDevice, gfxDevOffsets.setViewportMethod);
-		setProjectionMatrixMethod(gfxDevice, &matrix);
-		setViewMatrixMethod(gfxDevice, unityMethods.identityMatrix);
-		RectTInt viewport = {0, 0, bounds.size.width, bounds.size.height};
-		setViewportMethod(gfxDevice, &viewport);
+		gfxDevOffsets.setProjectionMatrixMethod(gfxDevice, &matrix);
+		gfxDevOffsets.setViewMatrixMethod(gfxDevice, unityMethods.identityMatrix);
+		RectTInt viewport = {0, 0, (int)bounds.size.width, (int)bounds.size.height};
+		gfxDevOffsets.setViewportMethod(gfxDevice, &viewport);
 		unityMethods.GfxHelperDrawQuad(gfxDevice, NULL, false, 1, 1);
 		*unityMethods.gDefaultFBOGL = defaultFBOGL;
 	}
@@ -374,8 +361,7 @@ void WindowDidResizeReplacement(id<NSWindowDelegate> self, SEL sel, NSNotificati
 	CGRect rect = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
 	if (!([window styleMask] & NSWindowStyleMaskFullScreen)) {
 		ScreenManager *mgr = unityMethods.GetScreenManager();
-		void (*requestResolutionMethod)(ScreenManager *, int, int, bool, int) = getVtableEntry(mgr, screenMgrOffsets.requestResolutionMethod);
-		bool (*isFullscreenMethod)(ScreenManager *) = getVtableEntry(mgr, screenMgrOffsets.isFullscreenMethod);
-		requestResolutionMethod(mgr, rect.size.width, rect.size.height, isFullscreenMethod(mgr), 0);
+		bool isFullscreen = screenMgrOffsets.isFullscreenMethod(mgr);
+		screenMgrOffsets.requestResolutionMethod(mgr, rect.size.width, rect.size.height, isFullscreen, 0);
 	}
 }

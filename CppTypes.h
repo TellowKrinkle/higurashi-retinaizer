@@ -76,4 +76,12 @@ struct DisplayDevice {
 };
 static_assert(sizeof(struct DisplayDevice) == 0x58, "Expected size of DisplayDevice");
 
+typedef struct GfxDevice GfxDevice;
+typedef struct InputManager InputManager;
+typedef struct PlayerSettings PlayerSettings;
+typedef struct QualitySetting QualitySetting;
+typedef struct QualitySettings QualitySettings;
+typedef struct RenderSurface RenderSurface;
+typedef struct ScreenManager ScreenManager;
+
 #endif /* CppTypes_h */

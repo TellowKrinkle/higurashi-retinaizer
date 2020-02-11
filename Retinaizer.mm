@@ -8,25 +8,26 @@
 #include "GameOffsets.h"
 #include "Offsets.h"
 #include <dlfcn.h>
+#include <type_traits>
 
 #pragma mark - Structs
 
 static struct MethodsToReplace {
 	void (*InputReadMousePosition)(void);
-	Pointf (*ScreenMgrGetMouseOrigin)(void *);
-	Pointf (*ScreenMgrGetMouseScale)(void *);
-	bool (*ScreenMgrSetResImmediate)(void *, int, int, bool, int);
-	void (*ScreenMgrCreateAndShowWindow)(void *, int, int, bool);
-	void (*ScreenMgrPreBlit)(void *);
+	Pointf (*ScreenMgrGetMouseOrigin)(ScreenManager *);
+	Pointf (*ScreenMgrGetMouseScale)(ScreenManager *);
+	bool (*ScreenMgrSetResImmediate)(ScreenManager *, int, int, bool, int);
+	void (*ScreenMgrCreateAndShowWindow)(ScreenManager *, int, int, bool);
+	void (*ScreenMgrPreBlit)(ScreenManager *);
 } methodsToReplace = {0};
 
 static struct ReplacementMethods {
-	void *InputReadMousePosition;
-	void *ScreenMgrGetMouseOrigin;
-	void *ScreenMgrGetMouseScale;
-	void *ScreenMgrSetResImmediate;
-	void *ScreenMgrCreateAndShowWindow;
-	void *ScreenMgrPreBlit;
+	void (*InputReadMousePosition)(void);
+	Pointf (*ScreenMgrGetMouseOrigin)(ScreenManager *);
+	Pointf (*ScreenMgrGetMouseScale)(ScreenManager *);
+	bool (*ScreenMgrSetResImmediate)(ScreenManager *, int, int, bool, int);
+	void (*ScreenMgrCreateAndShowWindow)(ScreenManager *, int, int, bool);
+	void (*ScreenMgrPreBlit)(ScreenManager *);
 } replacementMethods = {
 	.InputReadMousePosition = ReadMousePosReplacement,
 	.ScreenMgrGetMouseOrigin = GetMouseOriginReplacement,
@@ -39,43 +40,15 @@ static struct ReplacementMethods {
 struct UnityMethods unityMethods = {0};
 struct CPPMethods cppMethods = {0};
 
-struct ScreenManagerOffsets screenMgrOffsets = {
-	.getHeightMethod = UNUSED_VALUE,
-	.isFullscreenMethod = UNUSED_VALUE,
-	.releaseModeMethod = UNUSED_VALUE,
-	.window = UNUSED_VALUE,
-	.playerWindowView = UNUSED_VALUE,
-	.playerWindowDelegate = UNUSED_VALUE,
-	.renderSurfaceA = UNUSED_VALUE,
-	.renderSurfaceB = UNUSED_VALUE,
-};
-
-struct GfxDeviceOffsets gfxDevOffsets = {
-	.finishRenderingMethod = UNUSED_VALUE,
-	.setBackBufferColorDepthSurfaceMethod = UNUSED_VALUE,
-	.deallocRenderSurfaceMethod = UNUSED_VALUE,
-};
-
-struct PlayerSettingsOffsets playerSettingsOffsets = {
-	.collectionBehaviorFlag = UNUSED_VALUE,
-};
-
-struct QualitySettingsOffsets qualitySettingsOffsets = {
-	.settingsVector = UNUSED_VALUE,
-	.currentQuality = UNUSED_VALUE,
-};
-
-struct QualitySettingOffsets qualitySettingOffsets = {
-	.vSyncCount = UNUSED_VALUE,
-	.size = UNUSED_VALUE,
-};
-
-struct InputManagerOffsets inputMgrOffsets = {
-	.mousePosition = UNUSED_VALUE,
-};
+struct ScreenManagerOffsets screenMgrOffsets;
+struct GfxDeviceOffsets gfxDevOffsets;
+struct PlayerSettingsOffsets playerSettingsOffsets;
+struct QualitySettingsOffsets qualitySettingsOffsets;
+struct QualitySettingOffsets qualitySettingOffsets;
+struct InputManagerOffsets inputMgrOffsets;
 
 static const struct WantedFunction {
-	char *name;
+	const char *name;
 	void *target;
 } wantedFunctions[] = {
 	{"__Z22InputReadMousePositionv", &methodsToReplace.InputReadMousePosition},
@@ -197,7 +170,7 @@ static void initializeUnity() {
 		if (lc->cmd == LC_SYMTAB) {
 			const struct symtab_command *cmd = (const struct symtab_command *)lc;
 
-			char *buf = malloc(cmd->strsize + cmd->nsyms * sizeof(struct nlist_64));
+			char *buf = (char *)malloc(cmd->strsize + cmd->nsyms * sizeof(struct nlist_64));
 
 			FILE *fd = fopen(_dyld_get_image_name(0), "r");
 			int64_t foffset = getFatOffset(fd, header);
@@ -225,7 +198,7 @@ static void initializeUnity() {
 
 /// Modifies the function pointed to by `oldFunction` to immediately jump to `newFunction`
 __attribute__((noinline))
-static void replaceFunction(void *oldFunction, void *newFunction) {
+static void _replaceFunction(void *oldFunction, void *newFunction) {
 	// From http://thomasfinch.me/blog/2015/07/24/Hooking-C-Functions-At-Runtime.html
 	// Note: dlsym doesn't work on non-exported symbols which is why we're not using it
 	ssize_t offset = ((ssize_t)newFunction - ((ssize_t)oldFunction + 5));
@@ -244,6 +217,12 @@ static void replaceFunction(void *oldFunction, void *newFunction) {
 
 	// Re-disable write
 	mprotect((void *)pageStart, end - pageStart, PROT_READ | PROT_EXEC);
+}
+
+/// Modifies the function pointed to by `oldFunction` to immediately jump to `newFunction`
+template<typename Result, typename... Args>
+static void replaceFunction(Result (*oldFunction)(Args...), Result (*newFunction)(Args...)) {
+	_replaceFunction((void *)oldFunction, (void *)newFunction);
 }
 
 #pragma mark - Unity version switching
@@ -285,8 +264,8 @@ static bool verifyAndConfigureForUnityVersion(const char *version) {
 		setUnity(&OnikakushiOffsets);
 		return true;
 	}
-	replacementMethods.ScreenMgrGetMouseOrigin = TatariGetMouseOriginReplacement;
-	replacementMethods.ScreenMgrGetMouseScale = TatariGetMouseScaleReplacement;
+	replacementMethods.ScreenMgrGetMouseOrigin = (decltype(replacementMethods.ScreenMgrGetMouseOrigin))TatariGetMouseOriginReplacement;
+	replacementMethods.ScreenMgrGetMouseScale = (decltype(replacementMethods.ScreenMgrGetMouseScale))TatariGetMouseScaleReplacement;
 	if (strcmp(version, "5.3.4p1") == 0) {
 		setUnity(&TatarigoroshiOldOffsets);
 		return true;
@@ -314,6 +293,10 @@ static void setupNSAppication(void *ignored) {
 		}
 		[view setWantsBestResolutionOpenGLSurface:YES];
 	}
+}
+
+extern "C" {
+void goRetina(void);
 }
 
 void goRetina() {
