@@ -235,7 +235,7 @@ static bool verifyAllOffsetsWereFound() {
 			}
 			if (isExpectedMissing) { continue; }
 
-			fprintf(stderr, "libRetinaizer: Warning: %s was not found, not enabling retina!\n", wantedFunctions[i].name);
+			fprintf(stderr, "libRetinaizer: %s was not found\n", wantedFunctions[i].name);
 			allFound = false;
 		}
 	}
@@ -257,7 +257,7 @@ static bool verifyAndConfigureForUnityVersion(const char *version) {
 		setUnity(&TatarigoroshiOldOffsets);
 		return true;
 	}
-	fprintf(stderr, "libRetinaizer: Unrecognized unity version %s, not enabling retina\n", version);
+	fprintf(stderr, "libRetinaizer: Unrecognized unity version %s\n", version);
 	return false;
 }
 
@@ -266,7 +266,6 @@ static char * getUnityVersion() {
 	return cppMethods.mono_string_to_utf8(versionMonoString);
 }
 
-static bool isRetina = false;
 static const char *unityVersion = "unknown";
 
 #pragma mark - Mod initializer
@@ -287,6 +286,7 @@ void goRetina(void);
 }
 
 void goRetina() {
+	static bool isRetina = false;
 	if (isRetina) { return; }
 	isRetina = true;
 	initializeUnity();
@@ -295,7 +295,11 @@ void goRetina() {
 	}
 	bool unityVersionOkay = verifyAndConfigureForUnityVersion(unityVersion);
 	bool offsetsFound = verifyAllOffsetsWereFound();
-	if (!unityVersionOkay || !offsetsFound) { return; }
+	if (!unityVersionOkay || !offsetsFound) {
+		fprintf(stderr, "libRetinaizer: Not enabling retina due to the above issues\n");
+		return;
+	}
+	fprintf(stderr, "libRetinaizer: All checks okay, will enable retina\n");
 	replaceFunction(methodsToReplace.ScreenMgrGetMouseOrigin, replacementMethods.ScreenMgrGetMouseOrigin);
 	replaceFunction(methodsToReplace.InputReadMousePosition, replacementMethods.InputReadMousePosition);
 	replaceFunction(methodsToReplace.ScreenMgrGetMouseScale, replacementMethods.ScreenMgrGetMouseScale);
