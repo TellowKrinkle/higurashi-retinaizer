@@ -8,16 +8,6 @@
 inline AnyMemberOffset operator"" _i(unsigned long long n) { return AnyMemberOffset(n); }
 inline AnyVtableOffset operator"" _v(unsigned long long n) { return AnyVtableOffset(n); }
 
-struct AllOffsets {
-	struct ScreenManagerOffsets screenManager;
-	struct GfxDeviceOffsets gfxDevice;
-	struct PlayerSettingsOffsets playerSettings;
-	struct QualitySettingsOffsets qualitySettings;
-	struct QualitySettingOffsets qualitySetting;
-	struct InputManagerOffsets inputManager;
-	int unityVersion;
-};
-
 #pragma mark Onikakushi (5.2.2f1)
 
 static const struct AllOffsets OnikakushiOffsets = {

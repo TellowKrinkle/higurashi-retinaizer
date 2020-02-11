@@ -40,12 +40,7 @@ static struct ReplacementMethods {
 struct UnityMethods unityMethods = {0};
 struct CPPMethods cppMethods = {0};
 
-struct ScreenManagerOffsets screenMgrOffsets;
-struct GfxDeviceOffsets gfxDevOffsets;
-struct PlayerSettingsOffsets playerSettingsOffsets;
-struct QualitySettingsOffsets qualitySettingsOffsets;
-struct QualitySettingOffsets qualitySettingOffsets;
-struct InputManagerOffsets inputMgrOffsets;
+struct AllOffsets _allOffsets;
 
 static const struct WantedFunction {
 	const char *name;
@@ -248,16 +243,8 @@ static bool verifyAllOffsetsWereFound() {
 }
 
 static void setUnity(const struct AllOffsets *offsets) {
-	screenMgrOffsets = offsets->screenManager;
-	gfxDevOffsets = offsets->gfxDevice;
-	playerSettingsOffsets = offsets->playerSettings;
-	qualitySettingsOffsets = offsets->qualitySettings;
-	qualitySettingOffsets = offsets->qualitySetting;
-	inputMgrOffsets = offsets->inputManager;
-	UnityVersion = offsets->unityVersion;
+	_allOffsets = *offsets;
 }
-
-int UnityVersion = 0;
 
 static bool verifyAndConfigureForUnityVersion(const char *version) {
 	if (strcmp(version, "5.2.2f1") == 0) {

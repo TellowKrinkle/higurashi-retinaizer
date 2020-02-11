@@ -15,11 +15,6 @@ typedef struct Pointf {
 	float y;
 } Pointf;
 
-/// 6-digit hex number where each pair of digits represents one part of the Unity semantic version (so 5.2.2 would be 0x050202)
-extern int UnityVersion;
-static const int UNITY_VERSION_ONI = 0x050202;
-static const int UNITY_VERSION_TATARI_OLD = 0x050304;
-
 extern struct UnityMethods {
 	ScreenManager *(*GetScreenManager)(void);
 	InputManager *(*GetInputManager)(void);

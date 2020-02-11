@@ -56,7 +56,7 @@ struct VtableOffset {
 	}
 };
 
-extern struct ScreenManagerOffsets {
+struct ScreenManagerOffsets {
 	VtableOffset<ScreenManager, void, int, int, bool, int> RequestResolution;
 	VtableOffset<ScreenManager, int> GetHeight;
 	VtableOffset<ScreenManager, int> IsFullscreen;
@@ -71,33 +71,55 @@ extern struct ScreenManagerOffsets {
 	MemberOffset<ScreenManager, GLuint> framebufferB;
 	MemberOffset<ScreenManager, RenderSurface*> renderSurfaceA;
 	MemberOffset<ScreenManager, RenderSurface*> renderSurfaceB;
-} screenMgrOffsets;
+};
 
-extern struct GfxDeviceOffsets {
+struct GfxDeviceOffsets {
 	VtableOffset<GfxDevice, void> FinishRendering;
 	VtableOffset<GfxDevice, void, RenderSurface*, RenderSurface*> SetBackBufferColorDepthSurface;
 	VtableOffset<GfxDevice, void, Matrix4x4f*> SetProjectionMatrix;
 	VtableOffset<GfxDevice, void, Matrix4x4f*> SetViewMatrix;
 	VtableOffset<GfxDevice, void, RectTInt*> SetViewport;
 	VtableOffset<GfxDevice, void, RenderSurface*> DeallocRenderSurface;
-} gfxDevOffsets;
+};
 
-extern struct PlayerSettingsOffsets {
+struct PlayerSettingsOffsets {
 	MemberOffset<PlayerSettings, bool> collectionBehaviorFlag;
-} playerSettingsOffsets;
+};
 
-extern struct QualitySettingsOffsets {
+struct QualitySettingsOffsets {
 	MemberOffset<QualitySettings, QualitySetting*> settingsVector;
 	MemberOffset<QualitySettings, int> currentQuality;
-} qualitySettingsOffsets;
+};
 
-extern struct QualitySettingOffsets {
+struct QualitySettingOffsets {
 	MemberOffset<QualitySetting, int> vSyncCount;
 	size_t size = UNUSED_VALUE;
-} qualitySettingOffsets;
+};
 
-extern struct InputManagerOffsets {
+struct InputManagerOffsets {
 	MemberOffset<InputManager, Pointf> mousePosition;
-} inputMgrOffsets;
+};
+
+extern struct AllOffsets {
+	struct ScreenManagerOffsets screenManager;
+	struct GfxDeviceOffsets gfxDevice;
+	struct PlayerSettingsOffsets playerSettings;
+	struct QualitySettingsOffsets qualitySettings;
+	struct QualitySettingOffsets qualitySetting;
+	struct InputManagerOffsets inputManager;
+	int unityVersion = 0;
+} _allOffsets;
+
+static struct ScreenManagerOffsets& screenMgrOffsets = _allOffsets.screenManager;
+static struct GfxDeviceOffsets& gfxDevOffsets = _allOffsets.gfxDevice;
+static struct PlayerSettingsOffsets& playerSettingsOffsets = _allOffsets.playerSettings;
+static struct QualitySettingsOffsets& qualitySettingsOffsets = _allOffsets.qualitySettings;
+static struct QualitySettingOffsets& qualitySettingOffsets = _allOffsets.qualitySetting;
+static struct InputManagerOffsets& inputMgrOffsets = _allOffsets.inputManager;
+
+/// 6-digit hex number where each pair of digits represents one part of the Unity semantic version (so 5.2.2 would be 0x050202)
+static const int UNITY_VERSION_ONI = 0x050202;
+static const int UNITY_VERSION_TATARI_OLD = 0x050304;
+static int& UnityVersion = _allOffsets.unityVersion;
 
 #endif /* Offsets_h */
