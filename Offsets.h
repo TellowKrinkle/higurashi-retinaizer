@@ -83,7 +83,7 @@ struct GfxDeviceOffsets {
 };
 
 struct PlayerSettingsOffsets {
-	MemberOffset<PlayerSettings, bool> collectionBehaviorFlag;
+	MemberOffset<PlayerSettings, int> collectionBehaviorFlag;
 };
 
 struct QualitySettingsOffsets {
