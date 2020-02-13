@@ -11,12 +11,13 @@ typedef struct IntVector {
 	int *end_cap;
 } IntVector;
 
-typedef struct RectTInt {
-	int x;
-	int y;
-	int width;
-	int height;
-} RectTInt;
+template<typename T>
+struct RectT {
+	T x;
+	T y;
+	T width;
+	T height;
+};
 
 typedef struct Matrix4x4f {
 	float m00;

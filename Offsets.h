@@ -59,7 +59,7 @@ struct VtableOffset {
 struct ScreenManagerOffsets {
 	VtableOffset<ScreenManager, void, int, int, bool, int> RequestResolution;
 	VtableOffset<ScreenManager, int> GetHeight;
-	VtableOffset<ScreenManager, int> IsFullscreen;
+	VtableOffset<ScreenManager, bool> IsFullscreen;
 	VtableOffset<ScreenManager, int> ReleaseMode;
 	MemberOffset<ScreenManager, void*> window;
 	MemberOffset<ScreenManager, void*> playerWindowView;
@@ -78,7 +78,7 @@ struct GfxDeviceOffsets {
 	VtableOffset<GfxDevice, void, RenderSurface*, RenderSurface*> SetBackBufferColorDepthSurface;
 	VtableOffset<GfxDevice, void, Matrix4x4f*> SetProjectionMatrix;
 	VtableOffset<GfxDevice, void, Matrix4x4f*> SetViewMatrix;
-	VtableOffset<GfxDevice, void, RectTInt*> SetViewport;
+	VtableOffset<GfxDevice, void, RectT<int>*> SetViewport;
 	VtableOffset<GfxDevice, void, RenderSurface*> DeallocRenderSurface;
 };
 

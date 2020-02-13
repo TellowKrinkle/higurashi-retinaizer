@@ -105,7 +105,6 @@ static const struct {
 	{UNITY_VERSION_TATARI_OLD, INT_MAX, "__ZN26ScreenManagerOSXStandalone24RebindDefaultFramebufferEv"},
 	{0, UNITY_VERSION_TATARI_OLD, "__Z37MustSwitchResolutionForFullscreenModev"},
 	{0, UNITY_VERSION_TATARI_OLD, "__ZN13RenderTexture9SetActiveEPS_i11CubemapFacej"},
-	{0, UNITY_VERSION_TATARI_OLD, "__ZN13RenderTexture9SetActiveEPS_i11CubemapFacej"},
 };
 
 # pragma mark - Symbol loading

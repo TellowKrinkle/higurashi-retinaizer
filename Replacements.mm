@@ -36,6 +36,13 @@ static NSScreen *screenForID(CGDirectDisplayID display) {
 	return nil;
 }
 
+static bool MustSwitchResolutionForFullscreenMode() {
+	if (UnityVersion < UNITY_VERSION_TATARI_NEW) {
+		return unityMethods.MustSwitchResolutionForFullscreenMode();
+	}
+	return false;
+}
+
 #pragma mark - Replacement Functions
 // Note: All functions have checks of toggleFullScreen support disabled, since this should only run on retina (10.7+) macs
 // Higurashi games actually have an official minimum version of 10.11 so this isn't an issue, but if you plan to run this on a game that supports older macOS versions, add an @available check to goRetina.
@@ -89,7 +96,7 @@ void ReadMousePosReplacement() {
 }
 
 Pointf GetMouseScaleReplacement(ScreenManager *mgr) {
-	bool mustSwitch = unityMethods.MustSwitchResolutionForFullscreenMode();
+	bool mustSwitch = MustSwitchResolutionForFullscreenMode();
 	NSWindow *window = (__bridge NSWindow *)screenMgrOffsets.window.apply(mgr);
 	if (!mustSwitch && window) {
 		// Added convertRectToBacking: for retina support
@@ -130,7 +137,7 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 		unityMethods.RenderTextureReleaseAll();
 	}
 	uint32_t level = unityMethods.GetRequestedDeviceLevel();
-	bool mustSwitchResolution = fullscreen && unityMethods.MustSwitchResolutionForFullscreenMode();
+	bool mustSwitchResolution = fullscreen && MustSwitchResolutionForFullscreenMode();
 
 	void *context = NULL;
 	bool tatariGRendererCheck = UnityVersion >= UNITY_VERSION_TATARI_OLD && *unityMethods.gRenderer != 0x10;
@@ -203,7 +210,7 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 	prefname = makeStdString("Screenmanager Is Fullscreen mode");
 	unityMethods.PlayerPrefsSetInt(&prefname, fullscreen);
 	destroyStdString(prefname);
-	if (needsToMakeContext) {
+	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
 		unityMethods.ScreenMgrDidChangeScreenMode(mgr, width, height, fullscreen, context, &modeVec);
 	}
 	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
@@ -214,7 +221,7 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 	else if (tatariGRendererCheck) {
 		unityMethods.ScreenMgrRebindDefaultFramebuffer(mgr);
 	}
-	if (needsToMakeContext && fullscreen && !unityMethods.MustSwitchResolutionForFullscreenMode()) {
+	if (needsToMakeContext && fullscreen && !MustSwitchResolutionForFullscreenMode()) {
 		CGDirectDisplayID display = unityMethods.ScreenMgrGetDisplayID(mgr);
 		CGRect bounds = CGDisplayBounds(display);
 		NSScreen *screen = screenForID(display);
@@ -229,6 +236,9 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 				unityMethods.ScreenMgrSetupDownscaledFullscreenFBO(mgr, width, height);
 			}
 		}
+	}
+	if (UnityVersion >= UNITY_VERSION_TATARI_OLD) {
+		unityMethods.ScreenMgrDidChangeScreenMode(mgr, width, height, fullscreen, context, &modeVec);
 	}
 	return true;
 };
@@ -262,11 +272,13 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 			style |= NSWindowStyleMaskResizable;
 		}
 		window = [[NSWindow alloc] initWithContentRect:bounds styleMask:style backing:NSBackingStoreBuffered defer:YES];
+		CFRelease(screenMgrOffsets.window.apply(mgr));
 		screenMgrOffsets.window.apply(mgr) = (void *)CFBridgingRetain(window);
 		[window setAcceptsMouseMovedEvents:YES];
 		id windowDelegate = [NSClassFromString(@"PlayerWindowDelegate") alloc];
 		if (UnityVersion >= UNITY_VERSION_TATARI_OLD) {
 			windowDelegate = [windowDelegate init];
+			CFRelease(screenMgrOffsets.playerWindowDelegate.apply(mgr));
 			screenMgrOffsets.playerWindowDelegate.apply(mgr) = (void *)CFBridgingRetain(windowDelegate);
 		}
 		[window setDelegate:windowDelegate];
@@ -275,6 +287,7 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 			[window setStyleMask:resizable ? NSWindowStyleMaskResizable : 0];
 		}
 		PlayerWindowView *view = [[NSClassFromString(@"PlayerWindowView") alloc] initWithFrame:bounds];
+		CFRelease(screenMgrOffsets.playerWindowView.apply(mgr));
 		screenMgrOffsets.playerWindowView.apply(mgr) = (void *)CFBridgingRetain(view);
 		[window setContentView:view];
 		[window makeFirstResponder:view];
@@ -325,6 +338,7 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 
 void PreBlitReplacement(ScreenManager *mgr) {
 	int defaultFBOGL = *unityMethods.gDefaultFBOGL;
+	// TODO: There's a lot of logic that got added here in Tatarigoroshi.  Leaving it out hasn't broken the game but we should really have it here
 	if (defaultFBOGL != 0) {
 		GLuint framebuffer1 = screenMgrOffsets.framebufferA.apply(mgr);
 		GLuint framebuffer2 = screenMgrOffsets.framebufferB.apply(mgr);
@@ -349,9 +363,16 @@ void PreBlitReplacement(ScreenManager *mgr) {
 		GfxDevice *gfxDevice = unityMethods.GetRealGfxDevice();
 		gfxDevOffsets.SetProjectionMatrix(gfxDevice, &matrix);
 		gfxDevOffsets.SetViewMatrix(gfxDevice, unityMethods.identityMatrix);
-		RectTInt viewport = {0, 0, (int)bounds.size.width, (int)bounds.size.height};
+		RectT<int> viewport = {0, 0, (int)bounds.size.width, (int)bounds.size.height};
 		gfxDevOffsets.SetViewport(gfxDevice, &viewport);
-		unityMethods.GfxHelperDrawQuad(gfxDevice, NULL, false, 1, 1);
+		if (UnityVersion < UNITY_VERSION_TATARI_NEW) {
+			unityMethods.GfxHelperDrawQuad(gfxDevice, nullptr, false, 1, 1);
+		}
+		else {
+			auto drawQuad = (void (*)(void*, void*, bool, RectT<float>*))unityMethods.GfxHelperDrawQuad;
+			RectT<float> rect = {0, 0, 1, 1};
+			drawQuad(gfxDevice, nullptr, false, &rect);
+		}
 		*unityMethods.gDefaultFBOGL = defaultFBOGL;
 	}
 }
