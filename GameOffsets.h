@@ -91,4 +91,48 @@ static const struct AllOffsets TatarigoroshiOldOffsets = {
 	.unityVersion = UNITY_VERSION_TATARI_OLD
 };
 
+#pragma mark New Tatarigoroshi (5.4.0f1)
+
+static const struct AllOffsets TatarigoroshiNewOffsets = {
+	.screenManager = {
+		.RequestResolution = 0x10_v,
+		.GetHeight = 0xb0_v,
+		.IsFullscreen = 0xc8_v,
+		.ReleaseMode = 0x110_v,
+		.window = 0x70_i,
+		.playerWindowView = 0x78_i,
+		.playerWindowDelegate = 0x80_i,
+		.isFullscreen = 0x24_i,
+		.width = 0x68_i,
+		.height = 0x6c_i,
+		.framebufferA = 0x150_i,
+		.framebufferB = 0x15c_i,
+		.renderSurfaceA = 0xd0_i,
+		.renderSurfaceB = 0xd8_i,
+	},
+	.gfxDevice = {
+		.FinishRendering = 0x410_v,
+		.SetBackBufferColorDepthSurface = 0x2f0_v,
+		.SetProjectionMatrix = 0xe8_v,
+		.SetViewMatrix = 0xe0_v,
+		.SetViewport = 0x130_v,
+		.DeallocRenderSurface = 0x308_v,
+	},
+	.playerSettings = {
+		.collectionBehaviorFlag = 0x10c_i,
+	},
+	.qualitySettings = {
+		.settingsVector = 0x28_i,
+		.currentQuality = 0x44_i,
+	},
+	.qualitySetting = {
+		.vSyncCount = 0x44_i,
+		.size = 0x68,
+	},
+	.inputManager = {
+		.mousePosition = 0xb0_i,
+	},
+	.unityVersion = UNITY_VERSION_TATARI_NEW
+};
+
 #endif /* GameOffsets_h */

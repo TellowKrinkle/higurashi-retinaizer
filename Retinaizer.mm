@@ -97,11 +97,15 @@ static const struct WantedFunction {
 };
 
 static const struct {
-	int version;
+	int firstVersion;
+	int lastVersion;
 	const char *name;
-} laterAddedFunctions[] = {
-	{UNITY_VERSION_TATARI_OLD, "_g_Renderer"},
-	{UNITY_VERSION_TATARI_OLD, "__ZN26ScreenManagerOSXStandalone24RebindDefaultFramebufferEv"},
+} notAlwaysAvailable[] = {
+	{UNITY_VERSION_TATARI_OLD, INT_MAX, "_g_Renderer"},
+	{UNITY_VERSION_TATARI_OLD, INT_MAX, "__ZN26ScreenManagerOSXStandalone24RebindDefaultFramebufferEv"},
+	{0, UNITY_VERSION_TATARI_OLD, "__Z37MustSwitchResolutionForFullscreenModev"},
+	{0, UNITY_VERSION_TATARI_OLD, "__ZN13RenderTexture9SetActiveEPS_i11CubemapFacej"},
+	{0, UNITY_VERSION_TATARI_OLD, "__ZN13RenderTexture9SetActiveEPS_i11CubemapFacej"},
 };
 
 # pragma mark - Symbol loading
@@ -224,18 +228,18 @@ static void replaceFunction(Result (*oldFunction)(Args...), Result (*newFunction
 
 static bool verifyAllOffsetsWereFound() {
 	bool allFound = true;
-	for (int i = 0; i < sizeof(wantedFunctions) / sizeof(*wantedFunctions); i++) {
-		if (*(void **)wantedFunctions[i].target == NULL) {
-			// Check if it's known to have been added in a later game
+	for (const auto& function : wantedFunctions) {
+		if (function.target == nullptr) {
+			// Check if it's known to not be here
 			bool isExpectedMissing = false;
-			for (int j = 0; j < sizeof(laterAddedFunctions) / sizeof(*laterAddedFunctions); j++) {
-				if (UnityVersion < laterAddedFunctions[j].version && strcmp(laterAddedFunctions[j].name, wantedFunctions[i].name) == 0) {
+			for (const auto& entry : notAlwaysAvailable) {
+				if ((UnityVersion < entry.firstVersion || UnityVersion > entry.lastVersion) && strcmp(entry.name, function.name) == 0) {
 					isExpectedMissing = true;
 				}
 			}
 			if (isExpectedMissing) { continue; }
 
-			fprintf(stderr, "libRetinaizer: %s was not found\n", wantedFunctions[i].name);
+			fprintf(stderr, "libRetinaizer: %s was not found\n", function.name);
 			allFound = false;
 		}
 	}
@@ -255,6 +259,10 @@ static bool verifyAndConfigureForUnityVersion(const char *version) {
 	replacementMethods.ScreenMgrGetMouseScale = (decltype(replacementMethods.ScreenMgrGetMouseScale))TatariGetMouseScaleReplacement;
 	if (strcmp(version, "5.3.4p1") == 0) {
 		setUnity(&TatarigoroshiOldOffsets);
+		return true;
+	}
+	if (strcmp(version, "5.4.0f1") == 0) {
+		setUnity(&TatarigoroshiNewOffsets);
 		return true;
 	}
 	fprintf(stderr, "libRetinaizer: Unrecognized unity version %s\n", version);
