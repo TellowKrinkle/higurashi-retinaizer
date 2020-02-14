@@ -263,6 +263,12 @@ static bool verifyAndConfigureForUnityVersion(const char *version) {
 		setUnity(&TatarigoroshiNewOffsets);
 		return true;
 	}
+	if (strcmp(version, "5.4.1f1") == 0) {
+		// 5.4.1f1 uses the same offsets as 5.4.0f1
+		setUnity(&TatarigoroshiNewOffsets);
+		UnityVersion = UNITY_VERSION_HIMA;
+		return true;
+	}
 	fprintf(stderr, "libRetinaizer: Unrecognized unity version %s\n", version);
 	return false;
 }

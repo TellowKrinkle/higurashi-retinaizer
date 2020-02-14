@@ -8,7 +8,7 @@
 inline AnyMemberOffset operator"" _i(unsigned long long n) { return AnyMemberOffset(n); }
 inline AnyVtableOffset operator"" _v(unsigned long long n) { return AnyVtableOffset(n); }
 
-#pragma mark Onikakushi (5.2.2f1)
+#pragma mark Onikakushi, Watanagashi (5.2.2f1)
 
 static const struct AllOffsets OnikakushiOffsets = {
 	.screenManager = {
@@ -134,5 +134,9 @@ static const struct AllOffsets TatarigoroshiNewOffsets = {
 	},
 	.unityVersion = UNITY_VERSION_TATARI_NEW
 };
+
+#pragma mark Himatsubushi (5.4.1f1)
+
+// 5.4.1f1 uses the same offsets as 5.4.0f1
 
 #endif /* GameOffsets_h */
