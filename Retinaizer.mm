@@ -93,7 +93,6 @@ static const struct WantedFunction {
 	{"__ZNSs4_Rep20_S_empty_rep_storageE", &cppMethods.stdStringEmptyRepStorage},
 	{"__ZNSs4_Rep10_M_destroyERKSaIcE", &cppMethods.DestroyStdStringRep},
 	{"__ZdlPv", &cppMethods.operatorDelete},
-	{"_mono_string_to_utf8", &cppMethods.mono_string_to_utf8},
 };
 
 static const struct {
@@ -268,28 +267,36 @@ static bool verifyAndConfigureForUnityVersion(const char *version) {
 	return false;
 }
 
-static char * getUnityVersion() {
-	void *versionMonoString = unityMethods.ApplicationGetCustomPropUnityVersion();
-	return cppMethods.mono_string_to_utf8(versionMonoString);
+static const char * getUnityVersion() {
+	const unsigned char *getVersion = (unsigned char *)unityMethods.ApplicationGetCustomPropUnityVersion;
+	for (int i = 0; i < 20; i++) {
+		// Looking for LEA RDI,[rip+VersionStringOffset]
+		// We're expecting the implementation to call scripting_string_new on a C version of the version string
+		if (getVersion[i] == 0x48 && getVersion[i+1] == 0x8d && getVersion[i+2] == 0x3d) {
+			const int *offset = (int *)(getVersion + i + 3);
+			return *offset + 4 + (char *)(offset);
+		}
+	}
+	return "unknown";
 }
 
 static const char *unityVersion = "unknown";
 
 #pragma mark - Mod initializer
 
-static void setupNSAppication(void *ignored) {
-	NSApplication *app = [NSApplication sharedApplication];
-	for (NSWindow *window in [app orderedWindows]) {
-		NSView *view = [window contentView];
-		if (![view isKindOfClass:NSClassFromString(@"PlayerWindowView")]) {
-			continue;
-		}
-		[view setWantsBestResolutionOpenGLSurface:YES];
-	}
-}
-
 extern "C" {
 void goRetina(void);
+}
+
+static bool verifyOkayToRun() {
+	bool unityVersionOkay = verifyAndConfigureForUnityVersion(unityVersion);
+	bool offsetsFound = verifyAllOffsetsWereFound();
+	if (!unityVersionOkay || !offsetsFound) {
+		fprintf(stderr, "libRetinaizer: Not enabling retina due to the above issues\n");
+		return false;
+	}
+	fprintf(stderr, "libRetinaizer: All checks okay, will enable retina\n");
+	return true;
 }
 
 void goRetina() {
@@ -297,16 +304,14 @@ void goRetina() {
 	if (isRetina) { return; }
 	isRetina = true;
 	initializeUnity();
-	if (unityMethods.ApplicationGetCustomPropUnityVersion && cppMethods.mono_string_to_utf8) {
-		unityVersion = strdup(getUnityVersion());
+	if (NSApp == nullptr) {
+		// Unity hasn't initialized yet, which means our first printout won't go to the unity log
+		dispatch_async_f(dispatch_get_main_queue(), NULL, [](void*){ verifyOkayToRun(); });
 	}
-	bool unityVersionOkay = verifyAndConfigureForUnityVersion(unityVersion);
-	bool offsetsFound = verifyAllOffsetsWereFound();
-	if (!unityVersionOkay || !offsetsFound) {
-		fprintf(stderr, "libRetinaizer: Not enabling retina due to the above issues\n");
-		return;
+	if (unityMethods.ApplicationGetCustomPropUnityVersion) {
+		unityVersion = getUnityVersion();
 	}
-	fprintf(stderr, "libRetinaizer: All checks okay, will enable retina\n");
+	if (!verifyOkayToRun()) { return; }
 	replaceFunction(methodsToReplace.ScreenMgrGetMouseOrigin, replacementMethods.ScreenMgrGetMouseOrigin);
 	replaceFunction(methodsToReplace.InputReadMousePosition, replacementMethods.InputReadMousePosition);
 	replaceFunction(methodsToReplace.ScreenMgrGetMouseScale, replacementMethods.ScreenMgrGetMouseScale);
@@ -314,11 +319,6 @@ void goRetina() {
 	replaceFunction(methodsToReplace.ScreenMgrCreateAndShowWindow, replacementMethods.ScreenMgrCreateAndShowWindow);
 	replaceFunction(methodsToReplace.ScreenMgrPreBlit, replacementMethods.ScreenMgrPreBlit);
 	method_setImplementation(class_getInstanceMethod(NSClassFromString(@"PlayerWindowDelegate"), @selector(windowDidResize:)), (IMP)WindowDidResizeReplacement);
-	dispatch_async_f(dispatch_get_main_queue(), NULL, setupNSAppication);
 }
 
-__attribute__((constructor))
-void setupRetinaizer() {
-	initializeUnity();
-	dispatch_async_f(dispatch_get_main_queue(), NULL, (dispatch_function_t)goRetina);
-}
+static bool goRetinaOnLoad = ((void)goRetina(), true);

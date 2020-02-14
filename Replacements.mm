@@ -36,6 +36,11 @@ static NSScreen *screenForID(CGDirectDisplayID display) {
 	return nil;
 }
 
+/// Unlike CFRelease, this doesn't explode on null pointers
+static void ObjCRelease(void *objcPtr) {
+	(void)(__bridge_transfer id)objcPtr;
+}
+
 static bool MustSwitchResolutionForFullscreenMode() {
 	if (UnityVersion < UNITY_VERSION_TATARI_NEW) {
 		return unityMethods.MustSwitchResolutionForFullscreenMode();
@@ -265,20 +270,23 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 		bounds = [screen convertRectFromBacking:bounds];
 	}
 	NSWindow *window = (__bridge NSWindow *)screenMgrOffsets.window.apply(mgr);
-	if (!window) {
+	if (window) {
+		[[window contentView] setWantsBestResolutionOpenGLSurface:YES];
+	}
+	else {
 		bool resizable = unityMethods.AllowResizableWindow();
 		NSWindowStyleMask style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable;
 		if (resizable) {
 			style |= NSWindowStyleMaskResizable;
 		}
 		window = [[NSWindow alloc] initWithContentRect:bounds styleMask:style backing:NSBackingStoreBuffered defer:YES];
-		CFRelease(screenMgrOffsets.window.apply(mgr));
+		ObjCRelease(screenMgrOffsets.window.apply(mgr));
 		screenMgrOffsets.window.apply(mgr) = (void *)CFBridgingRetain(window);
 		[window setAcceptsMouseMovedEvents:YES];
 		id windowDelegate = [NSClassFromString(@"PlayerWindowDelegate") alloc];
 		if (UnityVersion >= UNITY_VERSION_TATARI_OLD) {
 			windowDelegate = [windowDelegate init];
-			CFRelease(screenMgrOffsets.playerWindowDelegate.apply(mgr));
+			ObjCRelease(screenMgrOffsets.playerWindowDelegate.apply(mgr));
 			screenMgrOffsets.playerWindowDelegate.apply(mgr) = (void *)CFBridgingRetain(windowDelegate);
 		}
 		[window setDelegate:windowDelegate];
@@ -287,7 +295,8 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 			[window setStyleMask:resizable ? NSWindowStyleMaskResizable : 0];
 		}
 		PlayerWindowView *view = [[NSClassFromString(@"PlayerWindowView") alloc] initWithFrame:bounds];
-		CFRelease(screenMgrOffsets.playerWindowView.apply(mgr));
+		[view setWantsBestResolutionOpenGLSurface:YES];
+		ObjCRelease(screenMgrOffsets.playerWindowView.apply(mgr));
 		screenMgrOffsets.playerWindowView.apply(mgr) = (void *)CFBridgingRetain(view);
 		[window setContentView:view];
 		[window makeFirstResponder:view];
