@@ -5,7 +5,7 @@ LDFLAGS=-mmacosx-version-min=10.7 -O3 -flto=full -framework Cocoa -framework Ope
 libRetinaizer.dylib: Replacements.o Retinaizer.o
 	$(CC) -o $@ -shared $^ $(LDFLAGS)
 
-%.o: %.mm $(DEPS)
+%.o: %.mm
 	$(CC) -MMD -c -o $@ $< $(CFLAGS)
 
 -include *.d
