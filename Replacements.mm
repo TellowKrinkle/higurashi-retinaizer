@@ -326,9 +326,11 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 	}
 	hasRunModdedCreateWindow = true;
 
-	int flag = playerSettingsOffsets.collectionBehaviorFlag.apply(unityMethods.GetPlayerSettings());
+	int flag = playerSettingsOffsets.macFullscreenMode.apply(unityMethods.GetPlayerSettings());
 	if (flag == 2) {
 		[window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
+		// Some unity versions like to disable the menubar.  Put it back here
+		[NSApp setPresentationOptions:NSApplicationPresentationDefault];
 	}
 	else {
 		[window setCollectionBehavior:fullscreen ? NSWindowCollectionBehaviorFullScreenPrimary : NSWindowCollectionBehaviorDefault];

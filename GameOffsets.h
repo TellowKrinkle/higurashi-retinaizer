@@ -31,7 +31,7 @@ static const struct AllOffsets OnikakushiOffsets = {
 		.SetViewport = 0x128_v,
 	},
 	.playerSettings = {
-		.collectionBehaviorFlag = 0xd4_i,
+		.macFullscreenMode = 0xd4_i,
 	},
 	.qualitySettings = {
 		.settingsVector = 0x28_i,
@@ -75,7 +75,7 @@ static const struct AllOffsets TatarigoroshiOldOffsets = {
 		.DeallocRenderSurface = 0x308_v,
 	},
 	.playerSettings = {
-		.collectionBehaviorFlag = 0xd8_i,
+		.macFullscreenMode = 0xd8_i,
 	},
 	.qualitySettings = {
 		.settingsVector = 0x28_i,
@@ -119,7 +119,7 @@ static const struct AllOffsets TatarigoroshiNewOffsets = {
 		.DeallocRenderSurface = 0x308_v,
 	},
 	.playerSettings = {
-		.collectionBehaviorFlag = 0x10c_i,
+		.macFullscreenMode = 0x10c_i,
 	},
 	.qualitySettings = {
 		.settingsVector = 0x28_i,

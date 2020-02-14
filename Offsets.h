@@ -83,7 +83,7 @@ struct GfxDeviceOffsets {
 };
 
 struct PlayerSettingsOffsets {
-	MemberOffset<PlayerSettings, int> collectionBehaviorFlag;
+	MemberOffset<PlayerSettings, int> macFullscreenMode;
 };
 
 struct QualitySettingsOffsets {
