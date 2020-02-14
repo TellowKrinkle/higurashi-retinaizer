@@ -71,6 +71,7 @@ static const struct WantedFunction {
 	{"__ZN13RenderTexture10ReleaseAllEv", &unityMethods.RenderTextureReleaseAll},
 	{"__Z20DestroyMainContextGLv", &unityMethods.DestroyMainContextGL},
 	{"__ZN14GraphicsHelper8DrawQuadER9GfxDevicePK14ChannelAssignsbff", &unityMethods.GfxHelperDrawQuad},
+	{"__ZN14GraphicsHelper8DrawQuadER9GfxDevicePK14ChannelAssignsbRK5RectTIfE", &unityMethods.GfxHelperDrawQuad},
 	{"__Z23ActivateGraphicsContext12ObjectHandleI19GraphicsContext_TagPvEbi", &unityMethods.ActivateGraphicsContext},
 
 	{"__ZNK16ScreenManagerOSX12GetDisplayIDEv", &unityMethods.ScreenMgrGetDisplayID},
@@ -227,7 +228,7 @@ static void replaceFunction(Result (*oldFunction)(Args...), Result (*newFunction
 static bool verifyAllOffsetsWereFound() {
 	bool allFound = true;
 	for (const auto& function : wantedFunctions) {
-		if (function.target == nullptr) {
+		if (*(void **)function.target == nullptr) {
 			// Check if it's known to not be here
 			bool isExpectedMissing = false;
 			for (const auto& entry : notAlwaysAvailable) {
