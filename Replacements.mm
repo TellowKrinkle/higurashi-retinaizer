@@ -150,11 +150,10 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 	if (needsToMakeContext) {
 		int unk1 = -1;
 		if (UnityVersion < UNITY_VERSION_ME) {
-			context = unityMethods.MakeNewContext(level, width, height, mustSwitchResolution, true, false, 2, &unk1, true);
+			context = unityMethods.MakeNewContext.oni(level, width, height, mustSwitchResolution, true, false, 2, &unk1, true);
 		}
 		else {
-			auto makeNewContext = (void *(*)(uint32_t, int, int, int, bool, uint32_t, int *))unityMethods.MakeNewContext;
-			context = makeNewContext(level, width, height, mustSwitchResolution, true, 2, &unk1);
+			context = unityMethods.MakeNewContext.me(level, width, height, mustSwitchResolution, true, 2, &unk1);
 		}
 		if (!context) { return false; }
 		QualitySettings *qualitySettings = unityMethods.GetQualitySettings();
@@ -391,12 +390,11 @@ void PreBlitReplacement(ScreenManager *mgr) {
 		RectT<int> viewport = {0, 0, (int)bounds.size.width, (int)bounds.size.height};
 		gfxDevOffsets.SetViewport(gfxDevice, &viewport);
 		if (UnityVersion < UNITY_VERSION_TATARI_NEW) {
-			unityMethods.GfxHelperDrawQuad(gfxDevice, nullptr, false, 1, 1);
+			unityMethods.GfxHelperDrawQuad.oni(gfxDevice, nullptr, false, 1, 1);
 		}
 		else {
-			auto drawQuad = (void (*)(void*, void*, bool, RectT<float>*))unityMethods.GfxHelperDrawQuad;
 			RectT<float> rect = {0, 0, 1, 1};
-			drawQuad(gfxDevice, nullptr, false, &rect);
+			unityMethods.GfxHelperDrawQuad.tatari(gfxDevice, nullptr, false, &rect);
 		}
 		*unityMethods.gDefaultFBOGL = defaultFBOGL;
 	}

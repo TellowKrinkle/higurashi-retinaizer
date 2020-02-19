@@ -30,7 +30,10 @@ extern struct UnityMethods {
 
 	void (*SetSyncToVBL)(void *, int);
 	void (*PlayerPrefsSetInt)(StdString *, int);
-	void *(*MakeNewContext)(uint32_t, int, int, int, bool, bool, uint32_t, int *, bool);
+	union {
+		void *(*oni)(uint32_t, int, int, int, bool, bool, uint32_t, int *, bool);
+		void *(*me )(uint32_t, int, int, int, bool,       uint32_t, int *);
+	} MakeNewContext;
 	union {
 		void (*oni)(void *, int, int,      unsigned int);
 		void (*me )(void *, int, int, int, unsigned int);
@@ -38,7 +41,10 @@ extern struct UnityMethods {
 	void (*RenderTextureReleaseAll)(void);
 	void (*DestroyMainContextGL)(void);
 	void (*RecreateSurface)(void);
-	void (*GfxHelperDrawQuad)(void *, void *, bool, float, float);
+	union {
+		void (*oni   )(void *, void *, bool, float, float);
+		void (*tatari)(void *, void *, bool, RectT<float>*);
+	} GfxHelperDrawQuad;
 	bool (*ActivateGraphicsContext)(void *, bool, int);
 
 	CGDirectDisplayID (*ScreenMgrGetDisplayID)(ScreenManager *);
