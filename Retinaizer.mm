@@ -67,9 +67,12 @@ static const struct WantedFunction {
 	{"__Z12SetSyncToVBL12ObjectHandleI19GraphicsContext_TagPvEi", &unityMethods.SetSyncToVBL},
 	{"__ZN11PlayerPrefs6SetIntERKSsi", &unityMethods.PlayerPrefsSetInt},
 	{"__Z14MakeNewContext16GfxDeviceLevelGLiiibb17DepthBufferFormatPib", &unityMethods.MakeNewContext},
+	{"__Z14MakeNewContext16GfxDeviceLevelGLiiib17DepthBufferFormatPi", &unityMethods.MakeNewContext},
 	{"__ZN13RenderTexture9SetActiveEPS_i11CubemapFacej", &unityMethods.RenderTextureSetActive},
+	{"__ZN13RenderTexture9SetActiveEPS_i11CubemapFaceij", &unityMethods.RenderTextureSetActive},
 	{"__ZN13RenderTexture10ReleaseAllEv", &unityMethods.RenderTextureReleaseAll},
 	{"__Z20DestroyMainContextGLv", &unityMethods.DestroyMainContextGL},
+	{"__Z15RecreateSurfacev", &unityMethods.RecreateSurface},
 	{"__ZN14GraphicsHelper8DrawQuadER9GfxDevicePK14ChannelAssignsbff", &unityMethods.GfxHelperDrawQuad},
 	{"__ZN14GraphicsHelper8DrawQuadER9GfxDevicePK14ChannelAssignsbRK5RectTIfE", &unityMethods.GfxHelperDrawQuad},
 	{"__Z23ActivateGraphicsContext12ObjectHandleI19GraphicsContext_TagPvEbi", &unityMethods.ActivateGraphicsContext},
@@ -86,6 +89,7 @@ static const struct WantedFunction {
 
 	{"_gDefaultFBOGL", &unityMethods.gDefaultFBOGL},
 	{"_g_Renderer", &unityMethods.gRenderer},
+	{"_g_MetalSurfaceRequestedSize", &unityMethods.gMetalSurfaceRequestedSize},
 	{"_g_PopUpWindow", &unityMethods.gPopUpWindow},
 	{"__ZN10Matrix4x4f8identityE", &unityMethods.identityMatrix},
 	{"__ZL14displayDevices", &unityMethods.displayDevices},
@@ -104,7 +108,8 @@ static const struct {
 	{UNITY_VERSION_TATARI_OLD, INT_MAX, "_g_Renderer"},
 	{UNITY_VERSION_TATARI_OLD, INT_MAX, "__ZN26ScreenManagerOSXStandalone24RebindDefaultFramebufferEv"},
 	{0, UNITY_VERSION_TATARI_OLD, "__Z37MustSwitchResolutionForFullscreenModev"},
-	{0, UNITY_VERSION_TATARI_OLD, "__ZN13RenderTexture9SetActiveEPS_i11CubemapFacej"},
+	{0, UNITY_VERSION_HIMA, "_gDefaultFBOGL"},
+	{UNITY_VERSION_ME, INT_MAX, "_g_MetalSurfaceRequestedSize"},
 };
 
 # pragma mark - Symbol loading
@@ -268,6 +273,10 @@ static bool verifyAndConfigureForUnityVersion(const char *version) {
 		// 5.4.1f1 uses the same offsets as 5.4.0f1
 		setUnity(&TatarigoroshiNewOffsets);
 		UnityVersion = UNITY_VERSION_HIMA;
+		return true;
+	}
+	if (strcmp(version, "5.5.3p1") == 0) {
+		setUnity(&MeakashiOffsets);
 		return true;
 	}
 	fprintf(stderr, "libRetinaizer: Unrecognized unity version %s\n", version);

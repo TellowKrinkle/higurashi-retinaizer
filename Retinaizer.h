@@ -31,9 +31,13 @@ extern struct UnityMethods {
 	void (*SetSyncToVBL)(void *, int);
 	void (*PlayerPrefsSetInt)(StdString *, int);
 	void *(*MakeNewContext)(uint32_t, int, int, int, bool, bool, uint32_t, int *, bool);
-	void (*RenderTextureSetActive)(void *, int, int, unsigned int);
+	union {
+		void (*oni)(void *, int, int,      unsigned int);
+		void (*me )(void *, int, int, int, unsigned int);
+	} RenderTextureSetActive;
 	void (*RenderTextureReleaseAll)(void);
 	void (*DestroyMainContextGL)(void);
+	void (*RecreateSurface)(void);
 	void (*GfxHelperDrawQuad)(void *, void *, bool, float, float);
 	bool (*ActivateGraphicsContext)(void *, bool, int);
 
@@ -48,6 +52,7 @@ extern struct UnityMethods {
 
 	int *gDefaultFBOGL;
 	int *gRenderer;
+	CGSize *gMetalSurfaceRequestedSize;
 	bool *gPopUpWindow;
 	Matrix4x4f *identityMatrix;
 	struct DisplayDevice (*displayDevices)[8];

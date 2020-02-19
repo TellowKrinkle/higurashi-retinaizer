@@ -117,11 +117,12 @@ static struct QualitySettingsOffsets& qualitySettingsOffsets = _allOffsets.quali
 static struct QualitySettingOffsets& qualitySettingOffsets = _allOffsets.qualitySetting;
 static struct InputManagerOffsets& inputMgrOffsets = _allOffsets.inputManager;
 
-/// 6-digit hex number where each pair of digits represents one part of the Unity semantic version (so 5.2.2 would be 0x050202)
-static const int UNITY_VERSION_ONI = 0x050202;
-static const int UNITY_VERSION_TATARI_OLD = 0x050304;
-static const int UNITY_VERSION_TATARI_NEW = 0x050400;
-static const int UNITY_VERSION_HIMA = 0x050401;
+/// 8-digit hex number where each pair of digits represents one part of the Unity version (so 5.2.2f1 would be 0x05020201)
+static const int UNITY_VERSION_ONI = 0x05020201;
+static const int UNITY_VERSION_TATARI_OLD = 0x05030401;
+static const int UNITY_VERSION_TATARI_NEW = 0x05040001;
+static const int UNITY_VERSION_HIMA = 0x05040101;
+static const int UNITY_VERSION_ME = 0x05050301;
 static int& UnityVersion = _allOffsets.unityVersion;
 
 #endif /* Offsets_h */

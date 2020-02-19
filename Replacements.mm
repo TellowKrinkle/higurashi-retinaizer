@@ -121,8 +121,7 @@ Pointf *TatariGetMouseScaleReplacement(Pointf *output, ScreenManager *mgr) {
 bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool fullscreen, int refreshRate) {
 	GfxDevice *gfxDevice = unityMethods.GetGfxDevice();
 	gfxDevOffsets.FinishRendering(gfxDevice);
-	bool isBatchMode = unityMethods.IsBatchMode();
-	if (isBatchMode) { return false; }
+	if (unityMethods.IsBatchMode()) { return false; }
 	NSWindow *window = (__bridge NSWindow *)screenMgrOffsets.window.apply(mgr);
 	if ((([window styleMask] & NSWindowStyleMaskFullScreen) != 0) != fullscreen) {
 		[window toggleFullScreen:NULL];
@@ -137,7 +136,7 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 	});
 	unityMethods.ScreenMgrWillChangeMode(mgr, &modeVec);
 	screenMgrOffsets.ReleaseMode(mgr);
-	if (UnityVersion >= UNITY_VERSION_TATARI_OLD) {
+	if (UnityVersion >= UNITY_VERSION_TATARI_OLD && !(UnityVersion >= UNITY_VERSION_ME && *unityMethods.gRenderer == 0x10)) {
 		// Onikakushi calls this later
 		unityMethods.RenderTextureReleaseAll();
 	}
@@ -150,7 +149,13 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 
 	if (needsToMakeContext) {
 		int unk1 = -1;
-		context = unityMethods.MakeNewContext(level, width, height, mustSwitchResolution, true, false, 2, &unk1, true);
+		if (UnityVersion < UNITY_VERSION_ME) {
+			context = unityMethods.MakeNewContext(level, width, height, mustSwitchResolution, true, false, 2, &unk1, true);
+		}
+		else {
+			auto makeNewContext = (void *(*)(uint32_t, int, int, int, bool, uint32_t, int *))unityMethods.MakeNewContext;
+			context = makeNewContext(level, width, height, mustSwitchResolution, true, 2, &unk1);
+		}
 		if (!context) { return false; }
 		QualitySettings *qualitySettings = unityMethods.GetQualitySettings();
 		int currentQualityIdx = qualitySettingsOffsets.currentQuality.apply(qualitySettings);
@@ -187,6 +192,10 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 		width = frame.size.width;
 		height = frame.size.height;
 	}
+	if (UnityVersion >= UNITY_VERSION_ME && *unityMethods.gRenderer == 0x10) {
+		*unityMethods.gMetalSurfaceRequestedSize = {(double)width, (double)height};
+		unityMethods.RecreateSurface();
+	}
 	screenMgrOffsets.isFullscreen.apply(mgr) = fullscreen;
 	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
 		// Tatari+ calls this earlier
@@ -201,7 +210,12 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 			gfxDevOffsets.DeallocRenderSurface(gfxDevice, *rsA);
 			gfxDevOffsets.DeallocRenderSurface(gfxDevice, *rsB);
 			*rsA = *rsB = nullptr;
-			unityMethods.RenderTextureSetActive(NULL, 0, -1, 0x10);
+			if (UnityVersion < UNITY_VERSION_ME) {
+				unityMethods.RenderTextureSetActive.oni(NULL, 0, -1, 0x10);
+			}
+			else {
+				unityMethods.RenderTextureSetActive.me(NULL, 0, -1, 0, 0x10);
+			}
 		}
 		unityMethods.DestroyMainContextGL();
 	}
@@ -221,7 +235,6 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
 		*unityMethods.gDefaultFBOGL = 0;
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
 	}
 	else if (tatariGRendererCheck) {
 		unityMethods.ScreenMgrRebindDefaultFramebuffer(mgr);
@@ -348,8 +361,9 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 }
 
 void PreBlitReplacement(ScreenManager *mgr) {
-	int defaultFBOGL = *unityMethods.gDefaultFBOGL;
 	// TODO: There's a lot of logic that got added here in Tatarigoroshi.  Leaving it out hasn't broken the game but we should really have it here
+	if (UnityVersion >= UNITY_VERSION_ME) return;
+	int defaultFBOGL = *unityMethods.gDefaultFBOGL;
 	if (defaultFBOGL != 0) {
 		GLuint framebuffer1 = screenMgrOffsets.framebufferA.apply(mgr);
 		GLuint framebuffer2 = screenMgrOffsets.framebufferB.apply(mgr);
