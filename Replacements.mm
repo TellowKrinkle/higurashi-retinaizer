@@ -136,6 +136,11 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 	});
 	unityMethods.ScreenMgrWillChangeMode(mgr, &modeVec);
 	screenMgrOffsets.ReleaseMode(mgr);
+	if (2 == playerSettingsOffsets.macFullscreenMode.apply(unityMethods.GetPlayerSettings())) {
+		// Some unity versions like to disable the menubar in ReleaseMode.  Put it back here
+		// Possible future change: Modify ReleaseMode to not do this in the first place
+		[NSApp setPresentationOptions:NSApplicationPresentationDefault];
+	}
 	if (UnityVersion >= UNITY_VERSION_TATARI_OLD && !(UnityVersion >= UNITY_VERSION_ME && *unityMethods.gRenderer == 0x10)) {
 		// Onikakushi calls this later
 		unityMethods.RenderTextureReleaseAll();
@@ -341,8 +346,6 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 	int flag = playerSettingsOffsets.macFullscreenMode.apply(unityMethods.GetPlayerSettings());
 	if (flag == 2) {
 		[window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
-		// Some unity versions like to disable the menubar.  Put it back here
-		[NSApp setPresentationOptions:NSApplicationPresentationDefault];
 	}
 	else {
 		[window setCollectionBehavior:fullscreen ? NSWindowCollectionBehaviorFullScreenPrimary : NSWindowCollectionBehaviorDefault];
