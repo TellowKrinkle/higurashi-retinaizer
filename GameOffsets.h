@@ -139,7 +139,7 @@ static const struct AllOffsets TatarigoroshiNewOffsets = {
 
 // 5.4.1f1 uses the same offsets as 5.4.0f1
 
-#pragma mark Meakashi (5.5.3f1)
+#pragma mark Meakashi (5.5.3p1)
 
 static const struct AllOffsets MeakashiOffsets = {
 	.screenManager = {
@@ -182,5 +182,9 @@ static const struct AllOffsets MeakashiOffsets = {
 	},
 	.unityVersion = UNITY_VERSION_ME
 };
+
+#pragma mark Tsumihoroboshi (5.5.3p3)
+
+// 5.5.3p3 uses the same offsets as 5.5.3p1
 
 #endif /* GameOffsets_h */

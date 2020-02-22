@@ -279,6 +279,12 @@ static bool verifyAndConfigureForUnityVersion(const char *version) {
 		setUnity(&MeakashiOffsets);
 		return true;
 	}
+	if (strcmp(version, "5.5.3p3") == 0) {
+		// 5.5.3p3 uses the same offsets as 5.5.3p1
+		setUnity(&MeakashiOffsets);
+		UnityVersion = UNITY_VERSION_TSUMI;
+		return true;
+	}
 	fprintf(stderr, "libRetinaizer: Unrecognized unity version %s\n", version);
 	return false;
 }
