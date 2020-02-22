@@ -250,38 +250,34 @@ static bool verifyAllOffsetsWereFound() {
 	return allFound;
 }
 
-static void setUnity(const struct AllOffsets *offsets) {
-	_allOffsets = *offsets;
-}
-
 static bool verifyAndConfigureForUnityVersion(const char *version) {
 	if (strcmp(version, "5.2.2f1") == 0) {
-		setUnity(&OnikakushiOffsets);
+		_allOffsets = OnikakushiOffsets;
 		return true;
 	}
 	replacementMethods.ScreenMgrGetMouseOrigin = (decltype(replacementMethods.ScreenMgrGetMouseOrigin))TatariGetMouseOriginReplacement;
 	replacementMethods.ScreenMgrGetMouseScale = (decltype(replacementMethods.ScreenMgrGetMouseScale))TatariGetMouseScaleReplacement;
 	if (strcmp(version, "5.3.4p1") == 0) {
-		setUnity(&TatarigoroshiOldOffsets);
+		_allOffsets = TatarigoroshiOldOffsets;
 		return true;
 	}
 	if (strcmp(version, "5.4.0f1") == 0) {
-		setUnity(&TatarigoroshiNewOffsets);
+		_allOffsets = TatarigoroshiNewOffsets;
 		return true;
 	}
 	if (strcmp(version, "5.4.1f1") == 0) {
 		// 5.4.1f1 uses the same offsets as 5.4.0f1
-		setUnity(&TatarigoroshiNewOffsets);
+		_allOffsets = TatarigoroshiNewOffsets;
 		UnityVersion = UNITY_VERSION_HIMA;
 		return true;
 	}
 	if (strcmp(version, "5.5.3p1") == 0) {
-		setUnity(&MeakashiOffsets);
+		_allOffsets = MeakashiOffsets;
 		return true;
 	}
 	if (strcmp(version, "5.5.3p3") == 0) {
 		// 5.5.3p3 uses the same offsets as 5.5.3p1
-		setUnity(&MeakashiOffsets);
+		_allOffsets = MeakashiOffsets;
 		UnityVersion = UNITY_VERSION_TSUMI;
 		return true;
 	}
