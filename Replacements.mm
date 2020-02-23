@@ -3,6 +3,7 @@
 #include "Finally.h"
 #include <OpenGL/glext.h>
 #include <OpenGL/gl.h>
+#include <QuartzCore/QuartzCore.h>
 #include <Carbon/Carbon.h>
 
 #pragma mark - Helpers
@@ -203,6 +204,7 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 			// CreateAndShowWindow calls [NSWindow setFrame:display:animate:] which will autorelease the NSOpenGLContext in the PlayerWindowView if animate is `NO`.  The PlayerWindowView *really* wants its old NSOpenGLContext to be dealloc'd before it assigns the new NSOpenGLContext (otherwise blackscreen when the dealloc happens later).  Unity never encountered this because it always called with `animate:YES`.
 			CreateAndShowWindowReplacement(mgr, width, height, fullscreen);
 		}
+		window = (__bridge NSWindow *)screenMgrOffsets.window.apply(mgr);
 		PlayerWindowView *view = (__bridge PlayerWindowView *)screenMgrOffsets.playerWindowView.apply(mgr);
 		if (needsToMakeContext) {
 			[view setContext:*(CGLContextObj *)context];
@@ -298,6 +300,21 @@ static void newWindowOrigin(NSWindow *window, CGRect frame, CGRect displayBounds
 	[window setFrameOrigin:(NSPoint){x, y}];
 }
 
+static void MakeContentViewRetina(NSView *contentView) {
+	if (*unityMethods.gRenderer == 0x10) {
+		if (@available(macOS 10.11, *)) {
+			CAMetalLayer *layer = (CAMetalLayer *)[contentView layer];
+			CGRect bounds = [layer bounds];
+			CGSize size = [contentView convertRectToBacking:bounds].size;
+			[layer setContentsScale:size.width / bounds.size.width];
+			[layer setDrawableSize:size];
+		}
+	}
+	else {
+		[contentView setWantsBestResolutionOpenGLSurface:YES];
+	}
+}
+
 // Recenter window the first time this runs since the previous position was probably based on the wrong size
 static bool hasRunModdedCreateWindow = false;
 
@@ -312,7 +329,7 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 	}
 	NSWindow *window = (__bridge NSWindow *)screenMgrOffsets.window.apply(mgr);
 	if (window) {
-		[[window contentView] setWantsBestResolutionOpenGLSurface:YES];
+		MakeContentViewRetina([window contentView]);
 	}
 	else {
 		bool resizable = unityMethods.AllowResizableWindow();
@@ -336,7 +353,7 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 			[window setStyleMask:resizable ? NSWindowStyleMaskResizable : 0];
 		}
 		PlayerWindowView *view = [[NSClassFromString(@"PlayerWindowView") alloc] initWithFrame:bounds];
-		[view setWantsBestResolutionOpenGLSurface:YES];
+		MakeContentViewRetina(view);
 		ObjCRelease(screenMgrOffsets.playerWindowView.apply(mgr));
 		screenMgrOffsets.playerWindowView.apply(mgr) = (void *)CFBridgingRetain(view);
 		[window setContentView:view];
