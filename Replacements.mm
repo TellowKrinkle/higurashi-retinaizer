@@ -118,6 +118,23 @@ Pointf *TatariGetMouseScaleReplacement(Pointf *output, ScreenManager *mgr) {
 	return output;
 }
 
+static void PlayerPrefsSetInt(const char *name, int value) {
+	if (UnityVersion < UNITY_VERSION_MINA) {
+		StdString prefname = makeStdString(name);
+		unityMethods.PlayerPrefsSetInt.oni(&prefname, value);
+		destroyStdString(prefname);
+	}
+	else {
+		StringStorageDefault string = {0};
+		string.memLabel = 0x42;
+		unityMethods.StringStorageDefaultAssign(&string, name, strlen(name));
+		unityMethods.PlayerPrefsSetInt.mina(&string, value);
+		if (string.data != nullptr && string.capacity != 0) {
+			unityMethods.FreeAllocInternal(string.data, string.memLabel);
+		}
+	}
+}
+
 bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool fullscreen, int refreshRate) {
 	GfxDevice *gfxDevice = unityMethods.GetGfxDevice();
 	gfxDevOffsets.FinishRendering(gfxDevice);
@@ -134,14 +151,16 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 			cppMethods.operatorDelete(modeVec.begin);
 		}
 	});
-	unityMethods.ScreenMgrWillChangeMode(mgr, &modeVec);
+	if (UnityVersion < UNITY_VERSION_MINA) {
+		unityMethods.ScreenMgrWillChangeMode(mgr, &modeVec);
+	}
 	screenMgrOffsets.ReleaseMode(mgr);
 	if (2 == playerSettingsOffsets.macFullscreenMode.apply(unityMethods.GetPlayerSettings())) {
 		// Some unity versions like to disable the menubar in ReleaseMode.  Put it back here
 		// Possible future change: Modify ReleaseMode to not do this in the first place
 		[NSApp setPresentationOptions:NSApplicationPresentationDefault];
 	}
-	if (UnityVersion >= UNITY_VERSION_TATARI_OLD && !(UnityVersion >= UNITY_VERSION_ME && *unityMethods.gRenderer == 0x10)) {
+	if (UnityVersion >= UNITY_VERSION_TATARI_OLD && !(UnityVersion >= UNITY_VERSION_ME && *unityMethods.gRenderer == 0x10) && UnityVersion < UNITY_VERSION_MINA) {
 		// Onikakushi calls this later
 		unityMethods.RenderTextureReleaseAll();
 	}
@@ -157,8 +176,11 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 		if (UnityVersion < UNITY_VERSION_ME) {
 			context = unityMethods.MakeNewContext.oni(level, width, height, mustSwitchResolution, true, false, 2, &unk1, true);
 		}
-		else {
+		else if (UnityVersion < UNITY_VERSION_MINA) {
 			context = unityMethods.MakeNewContext.me(level, width, height, mustSwitchResolution, true, 2, &unk1);
+		}
+		else {
+			context = unityMethods.MakeNewContext.mina(level, width, height, mustSwitchResolution, true, 2);
 		}
 		if (!context) { return false; }
 		QualitySettings *qualitySettings = unityMethods.GetQualitySettings();
@@ -197,8 +219,13 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 		height = frame.size.height;
 	}
 	if (UnityVersion >= UNITY_VERSION_ME && *unityMethods.gRenderer == 0x10) {
-		*unityMethods.gMetalSurfaceRequestedSize = {(double)width, (double)height};
-		unityMethods.RecreateSurface();
+		if (UnityVersion < UNITY_VERSION_MINA) {
+			*unityMethods.gMetalSurfaceRequestedSize = {(double)width, (double)height};
+			unityMethods.RecreateSurface();
+		}
+		else {
+			metalSurfaceOffsets.size.apply(unityMethods.GetCurrentMetalSurface()) = {(double)width, (double)height};
+		}
 	}
 	screenMgrOffsets.isFullscreen.apply(mgr) = fullscreen;
 	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
@@ -224,17 +251,11 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 		unityMethods.DestroyMainContextGL();
 	}
 
-	StdString prefname = makeStdString("Screenmanager Resolution Width");
-	unityMethods.PlayerPrefsSetInt(&prefname, width);
-	destroyStdString(prefname);
-	prefname = makeStdString("Screenmanager Resolution Height");
-	unityMethods.PlayerPrefsSetInt(&prefname, height);
-	destroyStdString(prefname);
-	prefname = makeStdString("Screenmanager Is Fullscreen mode");
-	unityMethods.PlayerPrefsSetInt(&prefname, fullscreen);
-	destroyStdString(prefname);
+	PlayerPrefsSetInt("Screenmanager Resolution Width", width);
+	PlayerPrefsSetInt("Screenmanager Resolution Height", height);
+	PlayerPrefsSetInt("Screenmanager Is Fullscreen mode", fullscreen);
 	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
-		unityMethods.ScreenMgrDidChangeScreenMode(mgr, width, height, fullscreen, context, &modeVec);
+		unityMethods.ScreenMgrDidChangeScreenMode.oni(mgr, width, height, fullscreen, context, &modeVec);
 	}
 	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
 		*unityMethods.gDefaultFBOGL = 0;
@@ -259,8 +280,11 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 			}
 		}
 	}
-	if (UnityVersion >= UNITY_VERSION_TATARI_OLD) {
-		unityMethods.ScreenMgrDidChangeScreenMode(mgr, width, height, fullscreen, context, &modeVec);
+	if (UnityVersion >= UNITY_VERSION_TATARI_OLD && UnityVersion < UNITY_VERSION_MINA) {
+		unityMethods.ScreenMgrDidChangeScreenMode.oni(mgr, width, height, fullscreen, context, &modeVec);
+	}
+	else if (UnityVersion >= UNITY_VERSION_MINA) {
+		unityMethods.ScreenMgrDidChangeScreenMode.mina(mgr, width, height, fullscreen, context);
 	}
 	return true;
 };

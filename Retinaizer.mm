@@ -58,6 +58,7 @@ static const struct WantedFunction {
 	{"__Z18GetQualitySettingsv", &unityMethods.GetQualitySettings},
 	{"__Z17GetPlayerSettingsv", &unityMethods.GetPlayerSettings},
 	{"__Z16GetRealGfxDevicev", &unityMethods.GetRealGfxDevice},
+	{"__Z22GetCurrentMetalSurfacev", &unityMethods.GetCurrentMetalSurface},
 	{"__Z23GetRequestedDeviceLevelv", &unityMethods.GetRequestedDeviceLevel},
 	{"__Z11IsBatchmodev", &unityMethods.IsBatchMode},
 	{"__Z37MustSwitchResolutionForFullscreenModev", &unityMethods.MustSwitchResolutionForFullscreenMode},
@@ -66,10 +67,13 @@ static const struct WantedFunction {
 
 	{"__Z12SetSyncToVBL12ObjectHandleI19GraphicsContext_TagPvEi", &unityMethods.SetSyncToVBL},
 	{"__ZN11PlayerPrefs6SetIntERKSsi", &unityMethods.PlayerPrefsSetInt},
+	{"__ZN11PlayerPrefs6SetIntERKN4core12basic_stringIcNS0_20StringStorageDefaultIcEEEEi", &unityMethods.PlayerPrefsSetInt},
 	{"__Z14MakeNewContext16GfxDeviceLevelGLiiibb17DepthBufferFormatPib", &unityMethods.MakeNewContext},
 	{"__Z14MakeNewContext16GfxDeviceLevelGLiiib17DepthBufferFormatPi", &unityMethods.MakeNewContext},
+	{"__Z14MakeNewContext16GfxDeviceLevelGLiiib17DepthBufferFormat", &unityMethods.MakeNewContext},
 	{"__ZN13RenderTexture9SetActiveEPS_i11CubemapFacej", &unityMethods.RenderTextureSetActive},
 	{"__ZN13RenderTexture9SetActiveEPS_i11CubemapFaceij", &unityMethods.RenderTextureSetActive},
+	{"__ZN13RenderTexture9SetActiveEPS_i11CubemapFaceiNS_14SetActiveFlagsE", &unityMethods.RenderTextureSetActive},
 	{"__ZN13RenderTexture10ReleaseAllEv", &unityMethods.RenderTextureReleaseAll},
 	{"__Z20DestroyMainContextGLv", &unityMethods.DestroyMainContextGL},
 	{"__Z15RecreateSurfacev", &unityMethods.RecreateSurface},
@@ -82,10 +86,14 @@ static const struct WantedFunction {
 	{"__ZN16ScreenManagerOSX14WillChangeModeERSt6vectorIiSaIiEE", &unityMethods.ScreenMgrWillChangeMode},
 	{"__ZN16ScreenManagerOSX31SetFullscreenResolutionRobustlyERiS0_ib12ObjectHandleI19GraphicsContext_TagPvE", &unityMethods.ScreenMgrSetFullscreenResolutionRobustly},
 	{"__ZN16ScreenManagerOSX19DidChangeScreenModeEiii12ObjectHandleI19GraphicsContext_TagPvERSt6vectorIiSaIiEE", &unityMethods.ScreenMgrDidChangeScreenMode},
+	{"__ZN16ScreenManagerOSX19DidChangeScreenModeEiii12ObjectHandleI19GraphicsContext_TagPvE", &unityMethods.ScreenMgrDidChangeScreenMode},
 	{"__ZN26ScreenManagerOSXStandalone28SetupDownscaledFullscreenFBOEii", &unityMethods.ScreenMgrSetupDownscaledFullscreenFBO},
 	{"__ZN26ScreenManagerOSXStandalone24RebindDefaultFramebufferEv", &unityMethods.ScreenMgrRebindDefaultFramebuffer},
 
 	{"__ZN10Matrix4x4f8SetOrthoEffffff", &unityMethods.Matrix4x4fSetOrtho},
+
+	{"__ZN4core20StringStorageDefaultIcE6assignEPKcm", &unityMethods.StringStorageDefaultAssign},
+	{"__Z19free_alloc_internalPv18MemLabelIdentifier", &unityMethods.FreeAllocInternal},
 
 	{"_gDefaultFBOGL", &unityMethods.gDefaultFBOGL},
 	{"_g_Renderer", &unityMethods.gRenderer},
@@ -108,8 +116,16 @@ static const struct {
 	{UNITY_VERSION_TATARI_OLD, INT_MAX, "_g_Renderer"},
 	{UNITY_VERSION_TATARI_OLD, INT_MAX, "__ZN26ScreenManagerOSXStandalone24RebindDefaultFramebufferEv"},
 	{0, UNITY_VERSION_TATARI_OLD, "__Z37MustSwitchResolutionForFullscreenModev"},
+	{0, UNITY_VERSION_TATARI_NEW, "__ZN16ScreenManagerOSX31SetFullscreenResolutionRobustlyERiS0_ib12ObjectHandleI19GraphicsContext_TagPvE"},
 	{0, UNITY_VERSION_HIMA, "_gDefaultFBOGL"},
-	{UNITY_VERSION_ME, INT_MAX, "_g_MetalSurfaceRequestedSize"},
+	{UNITY_VERSION_ME, UNITY_VERSION_TSUMI, "_g_MetalSurfaceRequestedSize"},
+	{UNITY_VERSION_ME, UNITY_VERSION_TSUMI, "__Z15RecreateSurfacev"},
+	{0, UNITY_VERSION_TSUMI, "__ZN16ScreenManagerOSX14WillChangeModeERSt6vectorIiSaIiEE"},
+	{0, UNITY_VERSION_TSUMI, "__ZN14GraphicsHelper8DrawQuadER9GfxDevicePK14ChannelAssignsbff"},
+	{0, UNITY_VERSION_TSUMI, "__ZN14GraphicsHelper8DrawQuadER9GfxDevicePK14ChannelAssignsbRK5RectTIfE"},
+	{UNITY_VERSION_MINA, INT_MAX, "__Z22GetCurrentMetalSurfacev"},
+	{UNITY_VERSION_MINA, INT_MAX, "__ZN4core20StringStorageDefaultIcE6assignEPKcm"},
+	{UNITY_VERSION_MINA, INT_MAX, "__Z19free_alloc_internalPv18MemLabelIdentifier"},
 };
 
 # pragma mark - Symbol loading
@@ -279,6 +295,10 @@ static bool verifyAndConfigureForUnityVersion(const char *version) {
 		// 5.5.3p3 uses the same offsets as 5.5.3p1
 		_allOffsets = MeakashiOffsets;
 		UnityVersion = UNITY_VERSION_TSUMI;
+		return true;
+	}
+	if (strcmp(version, "5.6.7f1") == 0) {
+		_allOffsets = MinagoroshiOffsets;
 		return true;
 	}
 	fprintf(stderr, "libRetinaizer: Unrecognized unity version %s\n", version);

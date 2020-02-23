@@ -187,4 +187,51 @@ static const struct AllOffsets MeakashiOffsets = {
 
 // 5.5.3p3 uses the same offsets as 5.5.3p1
 
+#pragma mark Minagoroshi (5.6.7f1)
+
+static const struct AllOffsets MinagoroshiOffsets = {
+	.screenManager = {
+		.RequestResolution = 0x10_v,
+		.GetHeight = 0xb0_v,
+		.IsFullscreen = 0xc8_v,
+		.ReleaseMode = 0x110_v,
+		.window = 0x70_i,
+		.playerWindowView = 0x78_i,
+		.playerWindowDelegate = 0x80_i,
+		.isFullscreen = 0x24_i,
+		.width = 0x68_i,
+		.height = 0x6c_i,
+		.framebufferA = {},
+		.framebufferB = {},
+		.renderSurfaceA = 0x98_i,
+		.renderSurfaceB = 0xa0_i,
+	},
+	.gfxDevice = {
+		.FinishRendering = 0x440_v,
+		.SetBackBufferColorDepthSurface = 0x308_v,
+		.SetProjectionMatrix = 0xf8_v,
+		.SetViewMatrix = 0xf0_v,
+		.SetViewport = 0x140_v,
+		.DeallocRenderSurface = 0x320_v,
+	},
+	.playerSettings = {
+		.macFullscreenMode = 0x264_i,
+	},
+	.qualitySettings = {
+		.settingsVector = 0x30_i,
+		.currentQuality = 0x4c_i,
+	},
+	.qualitySetting = {
+		.vSyncCount = 0x64_i,
+		.size = 0x88,
+	},
+	.inputManager = {
+		.mousePosition = 0xb8_i,
+	},
+	.metalSurface = {
+		.size = 0x10_i
+	},
+	.unityVersion = UNITY_VERSION_MINA
+};
+
 #endif /* GameOffsets_h */

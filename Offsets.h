@@ -100,6 +100,10 @@ struct InputManagerOffsets {
 	MemberOffset<InputManager, Pointf> mousePosition;
 };
 
+struct MetalSurfaceOffsets {
+	MemberOffset<MetalSurfaceHelper, CGSize> size;
+};
+
 extern struct AllOffsets {
 	struct ScreenManagerOffsets screenManager;
 	struct GfxDeviceOffsets gfxDevice;
@@ -107,6 +111,7 @@ extern struct AllOffsets {
 	struct QualitySettingsOffsets qualitySettings;
 	struct QualitySettingOffsets qualitySetting;
 	struct InputManagerOffsets inputManager;
+	struct MetalSurfaceOffsets metalSurface;
 	int unityVersion = 0;
 } _allOffsets;
 
@@ -116,6 +121,7 @@ static struct PlayerSettingsOffsets& playerSettingsOffsets = _allOffsets.playerS
 static struct QualitySettingsOffsets& qualitySettingsOffsets = _allOffsets.qualitySettings;
 static struct QualitySettingOffsets& qualitySettingOffsets = _allOffsets.qualitySetting;
 static struct InputManagerOffsets& inputMgrOffsets = _allOffsets.inputManager;
+static struct MetalSurfaceOffsets& metalSurfaceOffsets = _allOffsets.metalSurface;
 
 /// 8-digit hex number where each pair of digits represents one part of the Unity version (so 5.2.2f1 would be 0x05020201)
 static const int UNITY_VERSION_ONI = 0x05020201;
@@ -124,6 +130,7 @@ static const int UNITY_VERSION_TATARI_NEW = 0x05040001;
 static const int UNITY_VERSION_HIMA = 0x05040101;
 static const int UNITY_VERSION_ME = 0x05050301;
 static const int UNITY_VERSION_TSUMI = 0x05050303;
+static const int UNITY_VERSION_MINA = 0x05060701;
 static int& UnityVersion = _allOffsets.unityVersion;
 
 #endif /* Offsets_h */

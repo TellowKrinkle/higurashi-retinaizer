@@ -5,6 +5,17 @@ typedef struct StdString {
 	char *c_str;
 } StdString;
 
+typedef struct StringStorageDefault {
+	char *data;
+	union {
+		char inlineData[16];
+		size_t capacity;
+	};
+	size_t len;
+	int memLabel;
+} StringStorageDefault;
+static_assert(sizeof(StringStorageDefault) == 40, "Expected size of StringStorageDefault to be 40");
+
 typedef struct IntVector {
 	int *begin;
 	int *end;
@@ -46,5 +57,6 @@ typedef struct QualitySetting QualitySetting;
 typedef struct QualitySettings QualitySettings;
 typedef struct RenderSurface RenderSurface;
 typedef struct ScreenManager ScreenManager;
+typedef struct MetalSurfaceHelper MetalSurfaceHelper;
 
 #endif /* CppTypes_h */

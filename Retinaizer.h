@@ -22,6 +22,7 @@ extern struct UnityMethods {
 	QualitySettings *(*GetQualitySettings)(void);
 	PlayerSettings *(*GetPlayerSettings)(void);
 	GfxDevice *(*GetRealGfxDevice)(void);
+	MetalSurfaceHelper *(*GetCurrentMetalSurface)(void);
 	uint32_t (*GetRequestedDeviceLevel)(void);
 	bool (*IsBatchMode)(void);
 	bool (*MustSwitchResolutionForFullscreenMode)(void);
@@ -29,10 +30,14 @@ extern struct UnityMethods {
 	char *(*ApplicationGetCustomPropUnityVersion)(void);
 
 	void (*SetSyncToVBL)(void *, int);
-	void (*PlayerPrefsSetInt)(StdString *, int);
 	union {
-		void *(*oni)(uint32_t, int, int, int, bool, bool, uint32_t, int *, bool);
-		void *(*me )(uint32_t, int, int, int, bool,       uint32_t, int *);
+		void (*oni )(StdString *,            int);
+		void (*mina)(StringStorageDefault *, int);
+	} PlayerPrefsSetInt;
+	union {
+		void *(*oni )(uint32_t, int, int, int, bool, bool, uint32_t, int *, bool);
+		void *(*me  )(uint32_t, int, int, int, bool,       uint32_t, int *);
+		void *(*mina)(uint32_t, int, int, int, bool,       uint32_t);
 	} MakeNewContext;
 	union {
 		void (*oni)(void *, int, int,      unsigned int);
@@ -50,11 +55,17 @@ extern struct UnityMethods {
 	CGDirectDisplayID (*ScreenMgrGetDisplayID)(ScreenManager *);
 	void (*ScreenMgrWillChangeMode)(ScreenManager *, IntVector *);
 	bool (*ScreenMgrSetFullscreenResolutionRobustly)(ScreenManager *, int *, int *, int, bool, void *);
-	void (*ScreenMgrDidChangeScreenMode)(ScreenManager *, int, int, int, void *, IntVector *);
+	union {
+		void (*oni )(ScreenManager *, int, int, int, void *, IntVector *);
+		void (*mina)(ScreenManager *, int, int, int, void *);
+	} ScreenMgrDidChangeScreenMode;
 	void (*ScreenMgrSetupDownscaledFullscreenFBO)(ScreenManager *, int, int);
 	void (*ScreenMgrRebindDefaultFramebuffer)(ScreenManager *);
 
 	void (*Matrix4x4fSetOrtho)(Matrix4x4f *, float, float, float, float, float, float);
+
+	void (*StringStorageDefaultAssign)(StringStorageDefault *, const char *, unsigned long);
+	void (*FreeAllocInternal)(void *, int);
 
 	int *gDefaultFBOGL;
 	int *gRenderer;
