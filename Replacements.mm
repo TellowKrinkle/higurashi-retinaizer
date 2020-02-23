@@ -301,7 +301,7 @@ static void newWindowOrigin(NSWindow *window, CGRect frame, CGRect displayBounds
 }
 
 static void MakeContentViewRetina(NSView *contentView) {
-	if (*unityMethods.gRenderer == 0x10) {
+	if (UnityVersion >= UNITY_VERSION_TATARI_OLD && *unityMethods.gRenderer == 0x10) {
 		if (@available(macOS 10.11, *)) {
 			CAMetalLayer *layer = (CAMetalLayer *)[contentView layer];
 			CGRect bounds = [layer bounds];
