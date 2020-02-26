@@ -302,11 +302,15 @@ static void newWindowOrigin(NSWindow *window, CGRect frame, CGRect displayBounds
 
 static void MakeContentViewRetina(NSView *contentView) {
 	if (UnityVersion >= UNITY_VERSION_TATARI_OLD && *unity.gRenderer == 0x10) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability"
+		// Unity wouldn't use metal if it wasn't available
 		CAMetalLayer *layer = (CAMetalLayer *)[contentView layer];
 		CGRect bounds = [layer bounds];
 		CGSize size = [contentView convertRectToBacking:bounds].size;
 		[layer setContentsScale:size.width / bounds.size.width];
 		[layer setDrawableSize:size];
+#pragma clang diagnostic pop
 	}
 	else {
 		[contentView setWantsBestResolutionOpenGLSurface:YES];

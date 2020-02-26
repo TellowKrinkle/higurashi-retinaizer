@@ -15,7 +15,6 @@
 		201D4797240677DC00DE5E5A /* Retinaizer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 201D478F240677DC00DE5E5A /* Retinaizer.mm */; };
 		201D4798240677DC00DE5E5A /* Retinaizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 201D4790240677DC00DE5E5A /* Retinaizer.h */; };
 		201D4799240677DC00DE5E5A /* CppTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 201D4791240677DC00DE5E5A /* CppTypes.h */; };
-		201D479B240677FB00DE5E5A /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 201D479A240677FB00DE5E5A /* Makefile */; };
 		2078222E240676DC007567D1 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2078222D240676DC007567D1 /* OpenGL.framework */; };
 		20782230240676E0007567D1 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2078222F240676E0007567D1 /* Carbon.framework */; };
 		20782232240676E4007567D1 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 20782231240676E4007567D1 /* Cocoa.framework */; };
@@ -173,7 +172,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				201D479B240677FB00DE5E5A /* Makefile in Sources */,
 				201D4797240677DC00DE5E5A /* Retinaizer.mm in Sources */,
 				201D4796240677DC00DE5E5A /* Replacements.mm in Sources */,
 			);
@@ -294,7 +292,6 @@
 		207821FE24067667007567D1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_WARN_UNGUARDED_AVAILABILITY = NO;
 				CODE_SIGN_STYLE = Automatic;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -312,7 +309,6 @@
 		207821FF24067667007567D1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_WARN_UNGUARDED_AVAILABILITY = NO;
 				CODE_SIGN_STYLE = Automatic;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
