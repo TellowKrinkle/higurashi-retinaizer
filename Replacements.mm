@@ -44,7 +44,7 @@ static void ObjCRelease(void *objcPtr) {
 
 static bool MustSwitchResolutionForFullscreenMode() {
 	if (UnityVersion < UNITY_VERSION_TATARI_NEW) {
-		return unityMethods.MustSwitchResolutionForFullscreenMode();
+		return unity.MustSwitchResolutionForFullscreenMode();
 	}
 	return false;
 }
@@ -78,10 +78,10 @@ void ReadMousePosReplacement() {
 	CGPoint point = CGEventGetLocation(event);
 	CFRelease(event);
 
-	ScreenManager *screenMgr = unityMethods.GetScreenManager();
+	ScreenManager *screenMgr = unity.GetScreenManager();
 	CGPoint origin;
 	if (screenMgrOffsets.IsFullscreen(screenMgr)) {
-		CGDirectDisplayID displayID = unityMethods.ScreenMgrGetDisplayID(screenMgr);
+		CGDirectDisplayID displayID = unity.ScreenMgrGetDisplayID(screenMgr);
 		origin = CGDisplayBounds(displayID).origin;
 		// Original binary gets mouse scale and multiplies by it.  In macOS, mouse coordinates are in display points, as are window positions, so multiplying by mouse scale would break things rather than fixing things.
 	}
@@ -96,7 +96,7 @@ void ReadMousePosReplacement() {
 	if (window) {
 		windowRelative = [window convertRectToBacking:(NSRect){windowRelative, NSZeroSize}].origin;
 	}
-	InputManager *inputManager = unityMethods.GetInputManager();
+	InputManager *inputManager = unity.GetInputManager();
 	Pointf *output = &inputMgrOffsets.mousePosition.apply(inputManager);
 	*output = { (float)windowRelative.x, (float)(windowHeight - windowRelative.y) };
 }
@@ -122,24 +122,24 @@ Pointf *TatariGetMouseScaleReplacement(Pointf *output, ScreenManager *mgr) {
 static void PlayerPrefsSetInt(const char *name, int value) {
 	if (UnityVersion < UNITY_VERSION_MINA) {
 		StdString prefname = makeStdString(name);
-		unityMethods.PlayerPrefsSetInt.oni(&prefname, value);
+		unity.PlayerPrefsSetInt.oni(&prefname, value);
 		destroyStdString(prefname);
 	}
 	else {
 		StringStorageDefault string = {0};
 		string.memLabel = 0x42;
-		unityMethods.StringStorageDefaultAssign(&string, name, strlen(name));
-		unityMethods.PlayerPrefsSetInt.mina(&string, value);
+		unity.StringStorageDefaultAssign(&string, name, strlen(name));
+		unity.PlayerPrefsSetInt.mina(&string, value);
 		if (string.data != nullptr && string.capacity != 0) {
-			unityMethods.FreeAllocInternal(string.data, string.memLabel);
+			unity.FreeAllocInternal(string.data, string.memLabel);
 		}
 	}
 }
 
 bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool fullscreen, int refreshRate) {
-	GfxDevice *gfxDevice = unityMethods.GetGfxDevice();
+	GfxDevice *gfxDevice = unity.GetGfxDevice();
 	gfxDevOffsets.FinishRendering(gfxDevice);
-	if (unityMethods.IsBatchMode()) { return false; }
+	if (unity.IsBatchMode()) { return false; }
 	NSWindow *window = (__bridge NSWindow *)screenMgrOffsets.window.apply(mgr);
 	if ((([window styleMask] & NSWindowStyleMaskFullScreen) != 0) != fullscreen) {
 		[window toggleFullScreen:NULL];
@@ -153,47 +153,47 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 		}
 	});
 	if (UnityVersion < UNITY_VERSION_MINA) {
-		unityMethods.ScreenMgrWillChangeMode(mgr, &modeVec);
+		unity.ScreenMgrWillChangeMode(mgr, &modeVec);
 	}
 	screenMgrOffsets.ReleaseMode(mgr);
-	if (2 == playerSettingsOffsets.macFullscreenMode.apply(unityMethods.GetPlayerSettings())) {
+	if (2 == playerSettingsOffsets.macFullscreenMode.apply(unity.GetPlayerSettings())) {
 		// Some unity versions like to disable the menubar in ReleaseMode.  Put it back here
 		// Possible future change: Modify ReleaseMode to not do this in the first place
 		[NSApp setPresentationOptions:NSApplicationPresentationDefault];
 	}
-	if (UnityVersion >= UNITY_VERSION_TATARI_OLD && !(UnityVersion >= UNITY_VERSION_ME && *unityMethods.gRenderer == 0x10) && UnityVersion < UNITY_VERSION_MINA) {
+	if (UnityVersion >= UNITY_VERSION_TATARI_OLD && !(UnityVersion >= UNITY_VERSION_ME && *unity.gRenderer == 0x10) && UnityVersion < UNITY_VERSION_MINA) {
 		// Onikakushi calls this later
-		unityMethods.RenderTextureReleaseAll();
+		unity.RenderTextureReleaseAll();
 	}
-	uint32_t level = unityMethods.GetRequestedDeviceLevel();
+	uint32_t level = unity.GetRequestedDeviceLevel();
 	bool mustSwitchResolution = fullscreen && MustSwitchResolutionForFullscreenMode();
 
 	void *context = NULL;
-	bool tatariGRendererCheck = UnityVersion >= UNITY_VERSION_TATARI_OLD && *unityMethods.gRenderer != 0x10;
+	bool tatariGRendererCheck = UnityVersion >= UNITY_VERSION_TATARI_OLD && *unity.gRenderer != 0x10;
 	bool needsToMakeContext = UnityVersion < UNITY_VERSION_TATARI_OLD || tatariGRendererCheck;
 
 	if (needsToMakeContext) {
 		int unk1 = -1;
 		if (UnityVersion < UNITY_VERSION_ME) {
-			context = unityMethods.MakeNewContext.oni(level, width, height, mustSwitchResolution, true, false, 2, &unk1, true);
+			context = unity.MakeNewContext.oni(level, width, height, mustSwitchResolution, true, false, 2, &unk1, true);
 		}
 		else if (UnityVersion < UNITY_VERSION_MINA) {
-			context = unityMethods.MakeNewContext.me(level, width, height, mustSwitchResolution, true, 2, &unk1);
+			context = unity.MakeNewContext.me(level, width, height, mustSwitchResolution, true, 2, &unk1);
 		}
 		else {
-			context = unityMethods.MakeNewContext.mina(level, width, height, mustSwitchResolution, true, 2);
+			context = unity.MakeNewContext.mina(level, width, height, mustSwitchResolution, true, 2);
 		}
 		if (!context) { return false; }
-		QualitySettings *qualitySettings = unityMethods.GetQualitySettings();
+		QualitySettings *qualitySettings = unity.GetQualitySettings();
 		int currentQualityIdx = qualitySettingsOffsets.currentQuality.apply(qualitySettings);
 		QualitySetting *settingsVector = qualitySettingsOffsets.settingsVector.apply(qualitySettings);
 		int vSyncCount = qualitySettingOffsets.vSyncCount.apply(arrayOffset(settingsVector, qualitySettingOffsets.size, currentQualityIdx));
-		unityMethods.SetSyncToVBL(context, vSyncCount);
+		unity.SetSyncToVBL(context, vSyncCount);
 	}
 
 	bool needsCreateAndShowWindow = !mustSwitchResolution;
 	if (mustSwitchResolution) {
-		bool success = unityMethods.ScreenMgrSetFullscreenResolutionRobustly(mgr, &width, &height, fullscreen, false, context);
+		bool success = unity.ScreenMgrSetFullscreenResolutionRobustly(mgr, &width, &height, fullscreen, false, context);
 		if (UnityVersion >= UNITY_VERSION_TATARI_OLD && !success) {
 			needsCreateAndShowWindow = true;
 			fullscreen = false;
@@ -220,23 +220,23 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 		width = frame.size.width;
 		height = frame.size.height;
 	}
-	if (UnityVersion >= UNITY_VERSION_ME && *unityMethods.gRenderer == 0x10) {
+	if (UnityVersion >= UNITY_VERSION_ME && *unity.gRenderer == 0x10) {
 		if (UnityVersion < UNITY_VERSION_MINA) {
-			*unityMethods.gMetalSurfaceRequestedSize = {(double)width, (double)height};
-			unityMethods.RecreateSurface();
+			*unity.gMetalSurfaceRequestedSize = {(double)width, (double)height};
+			unity.RecreateSurface();
 		}
 		else {
-			metalSurfaceOffsets.size.apply(unityMethods.GetCurrentMetalSurface()) = {(double)width, (double)height};
+			metalSurfaceOffsets.size.apply(unity.GetCurrentMetalSurface()) = {(double)width, (double)height};
 		}
 	}
 	screenMgrOffsets.isFullscreen.apply(mgr) = fullscreen;
 	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
 		// Tatari+ calls this earlier
-		unityMethods.RenderTextureReleaseAll();
+		unity.RenderTextureReleaseAll();
 	}
 	if (needsToMakeContext) {
-		if (UnityVersion >= UNITY_VERSION_TATARI_OLD && *unityMethods.gRenderer == 0x11 && screenMgrOffsets.backBufferColorSurface.apply(mgr) != nullptr) {
-			GfxDevice *gfxDevice = unityMethods.GetGfxDevice();
+		if (UnityVersion >= UNITY_VERSION_TATARI_OLD && *unity.gRenderer == 0x11 && screenMgrOffsets.backBufferColorSurface.apply(mgr) != nullptr) {
+			GfxDevice *gfxDevice = unity.GetGfxDevice();
 			RenderSurface **rsA = &screenMgrOffsets.backBufferColorSurface.apply(mgr);
 			RenderSurface **rsB = &screenMgrOffsets.backBufferDepthSurface.apply(mgr);
 			gfxDevOffsets.SetBackBufferColorDepthSurface(gfxDevice, *rsA, *rsB);
@@ -244,30 +244,30 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 			gfxDevOffsets.DeallocRenderSurface(gfxDevice, *rsB);
 			*rsA = *rsB = nullptr;
 			if (UnityVersion < UNITY_VERSION_ME) {
-				unityMethods.RenderTextureSetActive.oni(NULL, 0, -1, 0x10);
+				unity.RenderTextureSetActive.oni(NULL, 0, -1, 0x10);
 			}
 			else {
-				unityMethods.RenderTextureSetActive.me(NULL, 0, -1, 0, 0x10);
+				unity.RenderTextureSetActive.me(NULL, 0, -1, 0, 0x10);
 			}
 		}
-		unityMethods.DestroyMainContextGL();
+		unity.DestroyMainContextGL();
 	}
 
 	PlayerPrefsSetInt("Screenmanager Resolution Width", width);
 	PlayerPrefsSetInt("Screenmanager Resolution Height", height);
 	PlayerPrefsSetInt("Screenmanager Is Fullscreen mode", fullscreen);
 	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
-		unityMethods.ScreenMgrDidChangeScreenMode.oni(mgr, width, height, fullscreen, context, &modeVec);
+		unity.ScreenMgrDidChangeScreenMode.oni(mgr, width, height, fullscreen, context, &modeVec);
 	}
 	if (UnityVersion < UNITY_VERSION_TATARI_OLD) {
-		*unityMethods.gDefaultFBOGL = 0;
+		*unity.gDefaultFBOGL = 0;
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 	}
 	else if (tatariGRendererCheck) {
-		unityMethods.ScreenMgrRebindDefaultFramebuffer(mgr);
+		unity.ScreenMgrRebindDefaultFramebuffer(mgr);
 	}
 	if (needsToMakeContext && fullscreen && !MustSwitchResolutionForFullscreenMode()) {
-		CGDirectDisplayID display = unityMethods.ScreenMgrGetDisplayID(mgr);
+		CGDirectDisplayID display = unity.ScreenMgrGetDisplayID(mgr);
 		CGRect bounds = CGDisplayBounds(display);
 		NSScreen *screen = screenForID(display);
 		if (screen) {
@@ -275,18 +275,18 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 		}
 		if (width != bounds.size.width || height != bounds.size.height) {
 			if (tatariGRendererCheck) {
-				unityMethods.ActivateGraphicsContext(context, false, 0);
+				unity.ActivateGraphicsContext(context, false, 0);
 			}
 			if (UnityVersion < UNITY_VERSION_TATARI_OLD || tatariGRendererCheck) {
-				unityMethods.ScreenMgrSetupDownscaledFullscreenFBO(mgr, width, height);
+				unity.ScreenMgrSetupDownscaledFullscreenFBO(mgr, width, height);
 			}
 		}
 	}
 	if (UnityVersion >= UNITY_VERSION_TATARI_OLD && UnityVersion < UNITY_VERSION_MINA) {
-		unityMethods.ScreenMgrDidChangeScreenMode.oni(mgr, width, height, fullscreen, context, &modeVec);
+		unity.ScreenMgrDidChangeScreenMode.oni(mgr, width, height, fullscreen, context, &modeVec);
 	}
 	else if (UnityVersion >= UNITY_VERSION_MINA) {
-		unityMethods.ScreenMgrDidChangeScreenMode.mina(mgr, width, height, fullscreen, context);
+		unity.ScreenMgrDidChangeScreenMode.mina(mgr, width, height, fullscreen, context);
 	}
 	return true;
 };
@@ -301,7 +301,7 @@ static void newWindowOrigin(NSWindow *window, CGRect frame, CGRect displayBounds
 }
 
 static void MakeContentViewRetina(NSView *contentView) {
-	if (UnityVersion >= UNITY_VERSION_TATARI_OLD && *unityMethods.gRenderer == 0x10) {
+	if (UnityVersion >= UNITY_VERSION_TATARI_OLD && *unity.gRenderer == 0x10) {
 		CAMetalLayer *layer = (CAMetalLayer *)[contentView layer];
 		CGRect bounds = [layer bounds];
 		CGSize size = [contentView convertRectToBacking:bounds].size;
@@ -317,8 +317,8 @@ static void MakeContentViewRetina(NSView *contentView) {
 static bool hasRunModdedCreateWindow = false;
 
 void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, bool fullscreen) {
-	ScreenManager *otherMgr = unityMethods.GetScreenManager();
-	CGDirectDisplayID display = unityMethods.ScreenMgrGetDisplayID(otherMgr);
+	ScreenManager *otherMgr = unity.GetScreenManager();
+	CGDirectDisplayID display = unity.ScreenMgrGetDisplayID(otherMgr);
 	NSScreen *screen = screenForID(display);
 	CGRect displayBounds = CGDisplayBounds(display);
 	CGRect bounds = {CGPointZero, {(CGFloat)width, (CGFloat)height}};
@@ -330,7 +330,7 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 		MakeContentViewRetina([window contentView]);
 	}
 	else {
-		bool resizable = unityMethods.AllowResizableWindow();
+		bool resizable = unity.AllowResizableWindow();
 		NSWindowStyleMask style = NSWindowStyleMaskTitled|NSWindowStyleMaskClosable|NSWindowStyleMaskMiniaturizable;
 		if (resizable) {
 			style |= NSWindowStyleMaskResizable;
@@ -347,7 +347,7 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 		}
 		[window setDelegate:windowDelegate];
 		[window setBackgroundColor:[NSColor blackColor]];
-		if (*unityMethods.gPopUpWindow) {
+		if (*unity.gPopUpWindow) {
 			[window setStyleMask:resizable ? NSWindowStyleMaskResizable : 0];
 		}
 		PlayerWindowView *view = [[NSClassFromString(@"PlayerWindowView") alloc] initWithFrame:bounds];
@@ -382,7 +382,7 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 	}
 	hasRunModdedCreateWindow = true;
 
-	int flag = playerSettingsOffsets.macFullscreenMode.apply(unityMethods.GetPlayerSettings());
+	int flag = playerSettingsOffsets.macFullscreenMode.apply(unity.GetPlayerSettings());
 	if (flag == 2) {
 		[window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
 	}
@@ -403,12 +403,12 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 
 static void PreBlitReplacementGL(ScreenManager *mgr) {
 	// TODO: There's a lot of logic that got added here in Tatarigoroshi.  Leaving it out hasn't broken the game but we should really have it here
-	int defaultFBOGL = *unityMethods.gDefaultFBOGL;
+	int defaultFBOGL = *unity.gDefaultFBOGL;
 	if (defaultFBOGL != 0) {
-		bool isThreadOwner = UnityVersion < UNITY_VERSION_TATARI_NEW || unityMethods.IsRealGfxDeviceThreadOwner();
+		bool isThreadOwner = UnityVersion < UNITY_VERSION_TATARI_NEW || unity.IsRealGfxDeviceThreadOwner();
 		GfxDevice *gfxDev = nullptr;
 		if (!isThreadOwner) {
-			gfxDev = unityMethods.GetGfxDevice();
+			gfxDev = unity.GetGfxDevice();
 			gfxDevOffsets.AcquireThreadOwnership(gfxDev);
 		}
 		GLuint framebuffer1 = screenMgrOffsets.framebufferA.apply(mgr);
@@ -420,30 +420,30 @@ static void PreBlitReplacementGL(ScreenManager *mgr) {
 			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, framebuffer1);
 			glBlitFramebufferEXT(0, 0, width, height, 0, 0, width, height, 0x4000, GL_NEAREST);
 		}
-		*unityMethods.gDefaultFBOGL = 0;
+		*unity.gDefaultFBOGL = 0;
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-		ScreenManager *otherMgr = unityMethods.GetScreenManager();
-		CGDirectDisplayID display = unityMethods.ScreenMgrGetDisplayID(otherMgr);
+		ScreenManager *otherMgr = unity.GetScreenManager();
+		CGDirectDisplayID display = unity.ScreenMgrGetDisplayID(otherMgr);
 		CGRect bounds = CGDisplayBounds(display);
 		NSScreen *screen = screenForID(display);
 		if (screen) {
 			bounds = [screen convertRectToBacking:bounds];
 		}
 		Matrix4x4f matrix;
-		unityMethods.Matrix4x4fSetOrtho(&matrix, 0, 1, 0, 1, -1, 100);
-		GfxDevice *gfxDevice = unityMethods.GetRealGfxDevice();
+		unity.Matrix4x4fSetOrtho(&matrix, 0, 1, 0, 1, -1, 100);
+		GfxDevice *gfxDevice = unity.GetRealGfxDevice();
 		gfxDevOffsets.SetProjectionMatrix(gfxDevice, &matrix);
-		gfxDevOffsets.SetViewMatrix(gfxDevice, unityMethods.identityMatrix);
+		gfxDevOffsets.SetViewMatrix(gfxDevice, unity.identityMatrix);
 		RectT<int> viewport = {0, 0, (int)bounds.size.width, (int)bounds.size.height};
 		gfxDevOffsets.SetViewport(gfxDevice, &viewport);
 		if (UnityVersion < UNITY_VERSION_TATARI_NEW) {
-			unityMethods.GfxHelperDrawQuad.oni(gfxDevice, nullptr, false, 1, 1);
+			unity.GfxHelperDrawQuad.oni(gfxDevice, nullptr, false, 1, 1);
 		}
 		else {
 			RectT<float> rect = {0, 0, 1, 1};
-			unityMethods.GfxHelperDrawQuad.tatari(gfxDevice, nullptr, false, &rect);
+			unity.GfxHelperDrawQuad.tatari(gfxDevice, nullptr, false, &rect);
 		}
-		*unityMethods.gDefaultFBOGL = defaultFBOGL;
+		*unity.gDefaultFBOGL = defaultFBOGL;
 		if (!isThreadOwner) {
 			gfxDevOffsets.ReleaseThreadOwnership(gfxDev);
 		}
@@ -452,46 +452,46 @@ static void PreBlitReplacementGL(ScreenManager *mgr) {
 
 static void PreBlitReplacementGLES(ScreenManager *mgr) {
 	if (screenMgrOffsets.renderColorSurface.apply(mgr) == nullptr) { return; }
-	bool isThreadOwner = unityMethods.IsRealGfxDeviceThreadOwner();
+	bool isThreadOwner = unity.IsRealGfxDeviceThreadOwner();
 	GfxDevice *gfxDev = nullptr;
 	if (!isThreadOwner) {
-		gfxDev = unityMethods.GetGfxDevice();
+		gfxDev = unity.GetGfxDevice();
 		gfxDevOffsets.AcquireThreadOwnership(gfxDev);
 	}
-	ScreenManager *otherMgr = unityMethods.GetScreenManager();
-	CGDirectDisplayID displayID = unityMethods.ScreenMgrGetDisplayID(otherMgr);
+	ScreenManager *otherMgr = unity.GetScreenManager();
+	CGDirectDisplayID displayID = unity.ScreenMgrGetDisplayID(otherMgr);
 	CGRect bounds = CGDisplayBounds(displayID);
 	NSScreen *screen = screenForID(displayID);
 	if (screen) {
 		bounds = [screen convertRectToBacking:bounds];
 	}
-	GfxFramebufferGLES *fbGLES = unityMethods.GetFramebufferGLES();
+	GfxFramebufferGLES *fbGLES = unity.GetFramebufferGLES();
 	if (UnityVersion < UNITY_VERSION_ME) {
 		GLuint fb = gfxFramebufferGLESOffsets.framebufferOld.apply(fbGLES);
 		GLuint framebufferName = 0;
 		if (screenMgrOffsets.renderbuffer.apply(mgr) != 0) {
-			unityMethods.GfxFBGLESGetFramebufferName.tatari(&framebufferName, fbGLES, screenMgrOffsets.renderTargetSetup.apply(mgr));
+			unity.GfxFBGLESGetFramebufferName.tatari(&framebufferName, fbGLES, screenMgrOffsets.renderTargetSetup.apply(mgr));
 		}
-		ApiGLES *gGL = unityMethods.gGL;
+		ApiGLES *gGL = unity.gGL;
 		GLuint unk1 = 0, unk2 = 0, unk3 = 0;
-		unityMethods.ApiGLESBlitFramebuffer.tatari(gGL, &fb, 1, &unk1, &framebufferName, 0, 0, screenMgrOffsets.width.apply(mgr), screenMgrOffsets.height.apply(mgr), 0, 0, (int)bounds.size.width, (int)bounds.size.height, 0);
-		unityMethods.ApiGLESBindFramebuffer.tatari(gGL, 0, &unk2);
-		unityMethods.ApiGLESBindFramebuffer.tatari(gGL, 1, &unk3);
+		unity.ApiGLESBlitFramebuffer.tatari(gGL, &fb, 1, &unk1, &framebufferName, 0, 0, screenMgrOffsets.width.apply(mgr), screenMgrOffsets.height.apply(mgr), 0, 0, (int)bounds.size.width, (int)bounds.size.height, 0);
+		unity.ApiGLESBindFramebuffer.tatari(gGL, 0, &unk2);
+		unity.ApiGLESBindFramebuffer.tatari(gGL, 1, &unk3);
 
 	}
 	else {
 		GLHandle fb = gfxFramebufferGLESOffsets.framebufferNew.apply(fbGLES);
 		GLHandle framebufferName = { 0, -1 };
 		if (UnityVersion < UNITY_VERSION_MINA && screenMgrOffsets.renderbuffer.apply(mgr) != 0) {
-			framebufferName = unityMethods.GfxFBGLESGetFramebufferName.me(fbGLES, screenMgrOffsets.renderTargetSetup.apply(mgr));
+			framebufferName = unity.GfxFBGLESGetFramebufferName.me(fbGLES, screenMgrOffsets.renderTargetSetup.apply(mgr));
 		}
-		ApiGLES *gGL = unityMethods.gGL;
-		unityMethods.ApiGLESBlitFramebuffer.me(gGL, fb, 1, {0, -1}, framebufferName, 0, 0, screenMgrOffsets.width.apply(mgr), screenMgrOffsets.height.apply(mgr), 0, 0, (int)bounds.size.width, (int)bounds.size.height, 0);
+		ApiGLES *gGL = unity.gGL;
+		unity.ApiGLESBlitFramebuffer.me(gGL, fb, 1, {0, -1}, framebufferName, 0, 0, screenMgrOffsets.width.apply(mgr), screenMgrOffsets.height.apply(mgr), 0, 0, (int)bounds.size.width, (int)bounds.size.height, 0);
 		ColorRGBAf color = { .r = 0, .g = 0, .b = 0, .a = 1 };
 		GLbitfield clearflags = GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT|GL_COLOR_BUFFER_BIT;
-		unityMethods.ApiGLESClear(gGL, clearflags, &color, false, 0, 0);
-		unityMethods.ApiGLESBindFramebuffer.me(gGL, 0, { 0, -1 });
-		unityMethods.ApiGLESBindFramebuffer.me(gGL, 0, { 0, -1 });
+		unity.ApiGLESClear(gGL, clearflags, &color, false, 0, 0);
+		unity.ApiGLESBindFramebuffer.me(gGL, 0, { 0, -1 });
+		unity.ApiGLESBindFramebuffer.me(gGL, 0, { 0, -1 });
 	}
 	if (!isThreadOwner) {
 		gfxDevOffsets.ReleaseThreadOwnership(gfxDev);
@@ -503,7 +503,7 @@ void PreBlitReplacement(ScreenManager *mgr) {
 		PreBlitReplacementGLES(mgr);
 	}
 	else if (UnityVersion >= UNITY_VERSION_TATARI_NEW) {
-		GfxDevice *gfxDev = unityMethods.GetRealGfxDevice();
+		GfxDevice *gfxDev = unity.GetRealGfxDevice();
 		int renderer = gfxDevOffsets.renderer.apply(gfxDev);
 		if (renderer == 0x8 || renderer == 0xb || renderer == 0x11) {
 			PreBlitReplacementGLES(mgr);
@@ -521,7 +521,7 @@ void WindowDidResizeReplacement(id<NSWindowDelegate> self, SEL sel, NSNotificati
 	NSWindow *window = (NSWindow *)[notification object];
 	CGRect rect = [window convertRectToBacking:[window contentRectForFrameRect:[window frame]]];
 	if (!([window styleMask] & NSWindowStyleMaskFullScreen)) {
-		ScreenManager *mgr = unityMethods.GetScreenManager();
+		ScreenManager *mgr = unity.GetScreenManager();
 		bool isFullscreen = screenMgrOffsets.IsFullscreen(mgr);
 		screenMgrOffsets.RequestResolution(mgr, rect.size.width, rect.size.height, isFullscreen, 0);
 	}

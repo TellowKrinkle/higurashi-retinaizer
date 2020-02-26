@@ -90,7 +90,7 @@ extern struct UnityMethods {
 	bool *gPopUpWindow;
 	Matrix4x4f *identityMatrix;
 	struct DisplayDevice (*displayDevices)[8];
-} unityMethods;
+} unity;
 
 extern struct CPPMethods {
 	void (*MakeStdString)(StdString*, const char *, void *); // &this, cStr, allocator
