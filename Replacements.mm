@@ -302,13 +302,11 @@ static void newWindowOrigin(NSWindow *window, CGRect frame, CGRect displayBounds
 
 static void MakeContentViewRetina(NSView *contentView) {
 	if (UnityVersion >= UNITY_VERSION_TATARI_OLD && *unityMethods.gRenderer == 0x10) {
-		if (@available(macOS 10.11, *)) {
-			CAMetalLayer *layer = (CAMetalLayer *)[contentView layer];
-			CGRect bounds = [layer bounds];
-			CGSize size = [contentView convertRectToBacking:bounds].size;
-			[layer setContentsScale:size.width / bounds.size.width];
-			[layer setDrawableSize:size];
-		}
+		CAMetalLayer *layer = (CAMetalLayer *)[contentView layer];
+		CGRect bounds = [layer bounds];
+		CGSize size = [contentView convertRectToBacking:bounds].size;
+		[layer setContentsScale:size.width / bounds.size.width];
+		[layer setDrawableSize:size];
 	}
 	else {
 		[contentView setWantsBestResolutionOpenGLSurface:YES];
