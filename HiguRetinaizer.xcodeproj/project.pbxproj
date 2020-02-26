@@ -1,0 +1,354 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		201D4792240677DC00DE5E5A /* Offsets.h in Headers */ = {isa = PBXBuildFile; fileRef = 201D4789240677DC00DE5E5A /* Offsets.h */; };
+		201D4793240677DC00DE5E5A /* Replacements.h in Headers */ = {isa = PBXBuildFile; fileRef = 201D478A240677DC00DE5E5A /* Replacements.h */; };
+		201D4794240677DC00DE5E5A /* Finally.h in Headers */ = {isa = PBXBuildFile; fileRef = 201D478B240677DC00DE5E5A /* Finally.h */; };
+		201D4795240677DC00DE5E5A /* GameOffsets.h in Headers */ = {isa = PBXBuildFile; fileRef = 201D478C240677DC00DE5E5A /* GameOffsets.h */; };
+		201D4796240677DC00DE5E5A /* Replacements.mm in Sources */ = {isa = PBXBuildFile; fileRef = 201D478E240677DC00DE5E5A /* Replacements.mm */; };
+		201D4797240677DC00DE5E5A /* Retinaizer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 201D478F240677DC00DE5E5A /* Retinaizer.mm */; };
+		201D4798240677DC00DE5E5A /* Retinaizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 201D4790240677DC00DE5E5A /* Retinaizer.h */; };
+		201D4799240677DC00DE5E5A /* CppTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 201D4791240677DC00DE5E5A /* CppTypes.h */; };
+		201D479B240677FB00DE5E5A /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 201D479A240677FB00DE5E5A /* Makefile */; };
+		2078222E240676DC007567D1 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2078222D240676DC007567D1 /* OpenGL.framework */; };
+		20782230240676E0007567D1 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2078222F240676E0007567D1 /* Carbon.framework */; };
+		20782232240676E4007567D1 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 20782231240676E4007567D1 /* Cocoa.framework */; };
+		20782234240676E9007567D1 /* libSystem.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 20782233240676E9007567D1 /* libSystem.tbd */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		201D4789240677DC00DE5E5A /* Offsets.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Offsets.h; sourceTree = "<group>"; };
+		201D478A240677DC00DE5E5A /* Replacements.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Replacements.h; sourceTree = "<group>"; };
+		201D478B240677DC00DE5E5A /* Finally.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Finally.h; sourceTree = "<group>"; };
+		201D478C240677DC00DE5E5A /* GameOffsets.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameOffsets.h; sourceTree = "<group>"; };
+		201D478D240677DC00DE5E5A /* Readme.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Readme.md; sourceTree = "<group>"; };
+		201D478E240677DC00DE5E5A /* Replacements.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Replacements.mm; sourceTree = "<group>"; };
+		201D478F240677DC00DE5E5A /* Retinaizer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Retinaizer.mm; sourceTree = "<group>"; };
+		201D4790240677DC00DE5E5A /* Retinaizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Retinaizer.h; sourceTree = "<group>"; };
+		201D4791240677DC00DE5E5A /* CppTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CppTypes.h; sourceTree = "<group>"; };
+		201D479A240677FB00DE5E5A /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		207821F924067667007567D1 /* libRetinaizer.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libRetinaizer.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		2078222D240676DC007567D1 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		2078222F240676E0007567D1 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		20782231240676E4007567D1 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		20782233240676E9007567D1 /* libSystem.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libSystem.tbd; path = usr/lib/libSystem.tbd; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		207821F724067667007567D1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				20782234240676E9007567D1 /* libSystem.tbd in Frameworks */,
+				20782232240676E4007567D1 /* Cocoa.framework in Frameworks */,
+				20782230240676E0007567D1 /* Carbon.framework in Frameworks */,
+				2078222E240676DC007567D1 /* OpenGL.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		207821F024067667007567D1 = {
+			isa = PBXGroup;
+			children = (
+				2078221224067696007567D1 /* Retinaizer */,
+				207821FA24067667007567D1 /* Products */,
+				20782224240676AF007567D1 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		207821FA24067667007567D1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				207821F924067667007567D1 /* libRetinaizer.dylib */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2078221224067696007567D1 /* Retinaizer */ = {
+			isa = PBXGroup;
+			children = (
+				201D4791240677DC00DE5E5A /* CppTypes.h */,
+				201D478B240677DC00DE5E5A /* Finally.h */,
+				201D478C240677DC00DE5E5A /* GameOffsets.h */,
+				201D4789240677DC00DE5E5A /* Offsets.h */,
+				201D478A240677DC00DE5E5A /* Replacements.h */,
+				201D478E240677DC00DE5E5A /* Replacements.mm */,
+				201D4790240677DC00DE5E5A /* Retinaizer.h */,
+				201D478F240677DC00DE5E5A /* Retinaizer.mm */,
+				201D479A240677FB00DE5E5A /* Makefile */,
+				201D478D240677DC00DE5E5A /* Readme.md */,
+			);
+			name = Retinaizer;
+			sourceTree = "<group>";
+		};
+		20782224240676AF007567D1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				20782233240676E9007567D1 /* libSystem.tbd */,
+				20782231240676E4007567D1 /* Cocoa.framework */,
+				2078222F240676E0007567D1 /* Carbon.framework */,
+				2078222D240676DC007567D1 /* OpenGL.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		207821F524067667007567D1 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				201D4792240677DC00DE5E5A /* Offsets.h in Headers */,
+				201D4794240677DC00DE5E5A /* Finally.h in Headers */,
+				201D4793240677DC00DE5E5A /* Replacements.h in Headers */,
+				201D4798240677DC00DE5E5A /* Retinaizer.h in Headers */,
+				201D4799240677DC00DE5E5A /* CppTypes.h in Headers */,
+				201D4795240677DC00DE5E5A /* GameOffsets.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		207821F824067667007567D1 /* Retinaizer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 207821FD24067667007567D1 /* Build configuration list for PBXNativeTarget "Retinaizer" */;
+			buildPhases = (
+				207821F524067667007567D1 /* Headers */,
+				207821F624067667007567D1 /* Sources */,
+				207821F724067667007567D1 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Retinaizer;
+			productName = Retinaizer;
+			productReference = 207821F924067667007567D1 /* libRetinaizer.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		207821F124067667007567D1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1130;
+				ORGANIZATIONNAME = "Tellow Krinkle";
+				TargetAttributes = {
+					207821F824067667007567D1 = {
+						CreatedOnToolsVersion = 11.3.1;
+					};
+				};
+			};
+			buildConfigurationList = 207821F424067667007567D1 /* Build configuration list for PBXProject "HiguRetinaizer" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 207821F024067667007567D1;
+			productRefGroup = 207821FA24067667007567D1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				207821F824067667007567D1 /* Retinaizer */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		207821F624067667007567D1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				201D479B240677FB00DE5E5A /* Makefile in Sources */,
+				201D4797240677DC00DE5E5A /* Retinaizer.mm in Sources */,
+				201D4796240677DC00DE5E5A /* Replacements.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		207821FB24067667007567D1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		207821FC24067667007567D1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		207821FE24067667007567D1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_UNGUARDED_AVAILABILITY = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = NO;
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				LLVM_LTO = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		207821FF24067667007567D1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_UNGUARDED_AVAILABILITY = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = NO;
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				LLVM_LTO = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		207821F424067667007567D1 /* Build configuration list for PBXProject "HiguRetinaizer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				207821FB24067667007567D1 /* Debug */,
+				207821FC24067667007567D1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		207821FD24067667007567D1 /* Build configuration list for PBXNativeTarget "Retinaizer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				207821FE24067667007567D1 /* Debug */,
+				207821FF24067667007567D1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 207821F124067667007567D1 /* Project object */;
+}

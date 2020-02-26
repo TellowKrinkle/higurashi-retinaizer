@@ -27,6 +27,6 @@ If you find that your game does not retinaize, open your Unity log (`~/Library/L
 ## Development
 To ease development and debugging, use of Xcode is recommended.
 
-Create a new Xcode project and select Library.  Then set the framework to Cocoa and the type to Dynamic.  Delete the `.h` and `.m` files it defaults to, and drag all the files into the Xcode file manager, making sure to uncheck `Copy items if needed`.  Under the project settings Build Phases → Link Binaries with Libraries tab, add the Cocoa, Carbon, and OpenGL frameworks.  Build once, then add a new build scheme and edit the `Executable` to be the target game, and set the `DYLD_INSERT_LIBRARIES` to the dylib product (probably something like `/Users/you/Library/Developer/Xcode/DerivedData/something/...`).  Now you can run with ⌘R and breakpoints will work as expected. 
+You can use the included `.xcodeproj` to compile and run.  Edit the scheme of the project (click the dropdown by the run button and chose `Edit scheme...`) and set the executable to the game you want to debug under.  You don't need to copy the binary anywhere, the scheme should set `DYLD_INSERT_LIBRARIES` to the built `dylib`.  Now you can run with ⌘R and breakpoints will work as expected. 
 
 Note: Tatarigoroshi crashes on fullscreen and defullscreen when run under lldb (and therefore also when run through xcode).  Don't think that's due to the retinaizer and spend large amounts of time trying to debug it.
