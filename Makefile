@@ -1,6 +1,6 @@
 CC=clang
-CFLAGS=-stdlib=libc++ -std=gnu++14 -fno-rtti -fno-objc-exceptions -fno-exceptions -mmacosx-version-min=10.7 -O3 -flto=full -fobjc-arc
-LDFLAGS=-mmacosx-version-min=10.7 -O3 -flto=full -framework Cocoa -framework OpenGL -framework Carbon
+CFLAGS=-stdlib=libc++ -std=gnu++14 -fno-rtti -fno-objc-exceptions -fno-exceptions -mmacosx-version-min=10.7 -Os -flto=full -fobjc-arc
+LDFLAGS=-mmacosx-version-min=10.7 -Os -flto=full -framework Cocoa -framework OpenGL -framework Carbon
 
 libRetinaizer.dylib: Replacements.o Retinaizer.o
 	$(CC) -o $@ -shared $^ $(LDFLAGS)
