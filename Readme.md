@@ -1,6 +1,6 @@
 # Higurashi Retinaizer
 
-Enables retina display support for Higurashi games on macOS
+Enables retina display support for Higurashi games on macOS.  May also work on other games that use the same unity version as one of the Higurashi games
 
 ## Compiling
 Compile with `make`
@@ -12,10 +12,17 @@ Alternatively, you can run your game with the environment variable `DYLD_INSERT_
 
 If you find that your game does not retinaize, open your Unity log (`~/Library/Logs/Unity/Player.log`) and search it for `libRetinaizer`.  If anything comes up, it should contain a reason for not loading (or a claim that it tried to enable retina, in which case there's an issue with the library).  If nothing comes up, you messed up the loading of the dylib and should verify that you followed the above steps correctly.
 
+## Compatible Games / Unity Versions
+- Onikakushi, Watanagashi (Unity 5.2.2f1)
+- Tatarigoroshi (Unity 5.3.4p1 and 5.4.0f1)
+- Himatsubushi (Unity 5.4.1f1)
+- Meakashi (Unity 5.5.3p1)
+- Tsumihoroboshi (Unity 5.5.3p3)
+- Minagoroshi (Unity 5.6.7f1)
+
 ## Known Issues
 - If you start the game in fullscreen and then defullscreen with the green window button (rather than an in-game control), the window will be way too big
 - Game screen resolutions are used as pixel resolutions, not display-independent-point resolutions (so 1280x720 will now make a tiny window).  It seemed like less work to do things this way rather than the other way.
-- The vtable offsets used are known to work properly with the version of Unity used by Onikakushi but have not been tested with later games.  It may break horribly on them.
 
 ## Development
 To ease development and debugging, use of Xcode is recommended.
