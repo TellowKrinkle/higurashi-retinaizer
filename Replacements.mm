@@ -404,49 +404,49 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 static void PreBlitReplacementGL(ScreenManager *mgr) {
 	// TODO: There's a lot of logic that got added here in Tatarigoroshi.  Leaving it out hasn't broken the game but we should really have it here
 	int defaultFBOGL = *unity.gDefaultFBOGL;
-	if (defaultFBOGL != 0) {
-		bool isThreadOwner = UnityVersion < UNITY_VERSION_TATARI_NEW || unity.IsRealGfxDeviceThreadOwner();
-		GfxDevice *gfxDev = nullptr;
-		if (!isThreadOwner) {
-			gfxDev = unity.GetGfxDevice();
-			gfxDevOffsets.AcquireThreadOwnership(gfxDev);
-		}
-		GLuint framebuffer1 = screenMgrOffsets.framebufferA.apply(mgr);
-		GLuint framebuffer2 = screenMgrOffsets.framebufferB.apply(mgr);
-		GLint width = screenMgrOffsets.width.apply(mgr);
-		GLint height = screenMgrOffsets.height.apply(mgr);
-		if (framebuffer2 != 0) {
-			glBindFramebufferEXT(GL_READ_FRAMEBUFFER, framebuffer2);
-			glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, framebuffer1);
-			glBlitFramebufferEXT(0, 0, width, height, 0, 0, width, height, 0x4000, GL_NEAREST);
-		}
-		*unity.gDefaultFBOGL = 0;
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-		ScreenManager *otherMgr = unity.GetScreenManager();
-		CGDirectDisplayID display = unity.ScreenMgrGetDisplayID(otherMgr);
-		CGRect bounds = CGDisplayBounds(display);
-		NSScreen *screen = screenForID(display);
-		if (screen) {
-			bounds = [screen convertRectToBacking:bounds];
-		}
-		Matrix4x4f matrix;
-		unity.Matrix4x4fSetOrtho(&matrix, 0, 1, 0, 1, -1, 100);
-		GfxDevice *gfxDevice = unity.GetRealGfxDevice();
-		gfxDevOffsets.SetProjectionMatrix(gfxDevice, &matrix);
-		gfxDevOffsets.SetViewMatrix(gfxDevice, unity.identityMatrix);
-		RectT<int> viewport = {0, 0, (int)bounds.size.width, (int)bounds.size.height};
-		gfxDevOffsets.SetViewport(gfxDevice, &viewport);
-		if (UnityVersion < UNITY_VERSION_TATARI_NEW) {
-			unity.GfxHelperDrawQuad.oni(gfxDevice, nullptr, false, 1, 1);
-		}
-		else {
-			RectT<float> rect = {0, 0, 1, 1};
-			unity.GfxHelperDrawQuad.tatari(gfxDevice, nullptr, false, &rect);
-		}
-		*unity.gDefaultFBOGL = defaultFBOGL;
-		if (!isThreadOwner) {
-			gfxDevOffsets.ReleaseThreadOwnership(gfxDev);
-		}
+	if (defaultFBOGL == 0) { return; }
+
+	bool isThreadOwner = UnityVersion < UNITY_VERSION_TATARI_NEW || unity.IsRealGfxDeviceThreadOwner();
+	GfxDevice *gfxDev = nullptr;
+	if (!isThreadOwner) {
+		gfxDev = unity.GetGfxDevice();
+		gfxDevOffsets.AcquireThreadOwnership(gfxDev);
+	}
+	GLuint framebuffer1 = screenMgrOffsets.framebufferA.apply(mgr);
+	GLuint framebuffer2 = screenMgrOffsets.framebufferB.apply(mgr);
+	GLint width = screenMgrOffsets.width.apply(mgr);
+	GLint height = screenMgrOffsets.height.apply(mgr);
+	if (framebuffer2 != 0) {
+		glBindFramebufferEXT(GL_READ_FRAMEBUFFER, framebuffer2);
+		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, framebuffer1);
+		glBlitFramebufferEXT(0, 0, width, height, 0, 0, width, height, 0x4000, GL_NEAREST);
+	}
+	*unity.gDefaultFBOGL = 0;
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+	ScreenManager *otherMgr = unity.GetScreenManager();
+	CGDirectDisplayID display = unity.ScreenMgrGetDisplayID(otherMgr);
+	CGRect bounds = CGDisplayBounds(display);
+	NSScreen *screen = screenForID(display);
+	if (screen) {
+		bounds = [screen convertRectToBacking:bounds];
+	}
+	Matrix4x4f matrix;
+	unity.Matrix4x4fSetOrtho(&matrix, 0, 1, 0, 1, -1, 100);
+	GfxDevice *gfxDevice = unity.GetRealGfxDevice();
+	gfxDevOffsets.SetProjectionMatrix(gfxDevice, &matrix);
+	gfxDevOffsets.SetViewMatrix(gfxDevice, unity.identityMatrix);
+	RectT<int> viewport = {0, 0, (int)bounds.size.width, (int)bounds.size.height};
+	gfxDevOffsets.SetViewport(gfxDevice, &viewport);
+	if (UnityVersion < UNITY_VERSION_TATARI_NEW) {
+		unity.GfxHelperDrawQuad.oni(gfxDevice, nullptr, false, 1, 1);
+	}
+	else {
+		RectT<float> rect = {0, 0, 1, 1};
+		unity.GfxHelperDrawQuad.tatari(gfxDevice, nullptr, false, &rect);
+	}
+	*unity.gDefaultFBOGL = defaultFBOGL;
+	if (!isThreadOwner) {
+		gfxDevOffsets.ReleaseThreadOwnership(gfxDev);
 	}
 }
 

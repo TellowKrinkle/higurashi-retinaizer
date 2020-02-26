@@ -250,8 +250,7 @@ static void initializeUnity() {
 	}
 
 	// Symbols from outside the binary (e.g. libc++) won't get found by the above code but must be public so we can get them this way
-	for (int i = 0; i < sizeof(wantedFunctions) / sizeof(*wantedFunctions); i++) {
-		struct WantedFunction fn = wantedFunctions[i];
+	for (auto& fn : wantedFunctions) {
 		if (*(void **)fn.target == NULL) {
 			// Skip the initial `_` when using with dlsym
 			*(void **)fn.target = dlsym(RTLD_DEFAULT, fn.name + 1);
