@@ -13,11 +13,11 @@ static const size_t UNUSED_VALUE = 1UL << 48;
 
 struct AnyMemberOffset {
 	size_t offset;
-	inline explicit AnyMemberOffset(size_t _offset): offset(_offset) {}
+	constexpr inline explicit AnyMemberOffset(size_t _offset): offset(_offset) {}
 };
 struct AnyVtableOffset {
 	size_t offset;
-	inline explicit AnyVtableOffset(size_t _offset): offset(_offset) {}
+	constexpr inline explicit AnyVtableOffset(size_t _offset): offset(_offset) {}
 };
 
 /// An offset from a class to an instance variable in that class
@@ -28,7 +28,7 @@ struct MemberOffset {
 	size_t offset = UNUSED_VALUE;
 
 	MemberOffset() = default;
-	inline /*implicit*/ MemberOffset(AnyMemberOffset off): offset(off.offset) {}
+	constexpr inline /*implicit*/ MemberOffset(AnyMemberOffset off): offset(off.offset) {}
 
 	Member& apply(Class* c) const {
 		return *(Member*)(reinterpret_cast<unsigned char *>(c) + offset);
@@ -44,7 +44,7 @@ struct VtableOffset {
 	size_t offset = UNUSED_VALUE;
 
 	VtableOffset() = default;
-	inline /*implicit*/ VtableOffset(AnyVtableOffset off): offset(off.offset) {}
+	constexpr inline /*implicit*/ VtableOffset(AnyVtableOffset off): offset(off.offset) {}
 
 	Result operator()(Class* c, Args... args) const {
 		return bind(c)(c, args...);

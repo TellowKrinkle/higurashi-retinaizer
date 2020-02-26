@@ -5,8 +5,8 @@
 
 #include "Offsets.h"
 
-inline AnyMemberOffset operator"" _i(unsigned long long n) { return AnyMemberOffset(n); }
-inline AnyVtableOffset operator"" _v(unsigned long long n) { return AnyVtableOffset(n); }
+constexpr inline AnyMemberOffset operator"" _i(unsigned long long n) { return AnyMemberOffset(n); }
+constexpr inline AnyVtableOffset operator"" _v(unsigned long long n) { return AnyVtableOffset(n); }
 
 #pragma mark Onikakushi, Watanagashi (5.2.2f1)
 
