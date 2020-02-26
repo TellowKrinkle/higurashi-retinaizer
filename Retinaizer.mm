@@ -42,7 +42,7 @@ struct CPPMethods cppMethods = {0};
 
 struct AllOffsets _allOffsets;
 
-static const struct WantedFunction {
+static struct WantedFunction {
 	const char *name;
 	void *target;
 } wantedFunctions[] = {
@@ -143,18 +143,49 @@ static const struct {
 
 # pragma mark - Symbol loading
 
+/// Sorts the wanted functions array by name for binary search
+static void sortWantedFunctions() {
+	const int size = sizeof(wantedFunctions)/sizeof(*wantedFunctions);
+	for (int i = 1; i < size; i++) {
+		auto tmp = wantedFunctions[i];
+		int j = i;
+		while (j > 0 && strcmp(tmp.name, wantedFunctions[j-1].name) < 0) {
+			wantedFunctions[j] = wantedFunctions[j-1];
+			j -= 1;
+		}
+		wantedFunctions[j] = tmp;
+	}
+}
+
+/// Uses binary search to find the function with the given name, and writes `function` to its target
+static void writeWantedFunction(const char *name, void *function) {
+	int low = 0;
+	int high = sizeof(wantedFunctions)/sizeof(*wantedFunctions);
+	while (high > low) {
+		int mid = (high + low) / 2;
+		int cmp = strcmp(name, wantedFunctions[mid].name);
+		if (cmp < 0) {
+			high = mid;
+		}
+		else if (cmp > 0) {
+			low = mid + 1;
+		}
+		else {
+			*(void **)wantedFunctions[mid].target = function;
+			return;
+		}
+	}
+}
+
 /// Search through the given symbol list to find pointers to functions
 ///
 /// Functions it finds that are listed in `wantedFunctions` will have their addresses written into the associated pointers
 static void searchSyms(const struct nlist_64 *syms, int count, const char *strings, int64_t functionOffset) {
+	sortWantedFunctions();
 	for (int i = 0; i < count; i++) {
 		uint32_t offset = syms[i].n_un.n_strx;
 		const char *name = strings + offset;
-		for (int j = 0; j < sizeof(wantedFunctions) / sizeof(*wantedFunctions); j++) {
-			if (strcmp(wantedFunctions[j].name, name) == 0) {
-				*(void**)wantedFunctions[j].target = (void *)(syms[i].n_value + functionOffset);
-			}
-		}
+		writeWantedFunction(name, (void *)(syms[i].n_value + functionOffset));
 	}
 }
 
