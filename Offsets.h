@@ -67,10 +67,14 @@ struct ScreenManagerOffsets {
 	MemberOffset<ScreenManager, bool> isFullscreen;
 	MemberOffset<ScreenManager, int> width;
 	MemberOffset<ScreenManager, int> height;
+	MemberOffset<ScreenManager, GLuint> renderbuffer;
 	MemberOffset<ScreenManager, GLuint> framebufferA;
 	MemberOffset<ScreenManager, GLuint> framebufferB;
-	MemberOffset<ScreenManager, RenderSurface*> renderSurfaceA;
-	MemberOffset<ScreenManager, RenderSurface*> renderSurfaceB;
+	MemberOffset<ScreenManager, RenderSurface*> renderColorSurface;
+	MemberOffset<ScreenManager, RenderSurface*> renderDepthSurface;
+	MemberOffset<ScreenManager, RenderSurface*> backBufferColorSurface;
+	MemberOffset<ScreenManager, RenderSurface*> backBufferDepthSurface;
+	MemberOffset<ScreenManager, GfxRenderTargetSetup*> renderTargetSetup;
 };
 
 struct GfxDeviceOffsets {
@@ -80,6 +84,14 @@ struct GfxDeviceOffsets {
 	VtableOffset<GfxDevice, void, Matrix4x4f*> SetViewMatrix;
 	VtableOffset<GfxDevice, void, RectT<int>*> SetViewport;
 	VtableOffset<GfxDevice, void, RenderSurface*> DeallocRenderSurface;
+	VtableOffset<GfxDevice, void> AcquireThreadOwnership;
+	VtableOffset<GfxDevice, void> ReleaseThreadOwnership;
+	MemberOffset<GfxDevice, int> renderer;
+};
+
+struct GfxFramebufferGLESOffsets {
+	MemberOffset<GfxFramebufferGLES, GLuint> framebufferOld;
+	MemberOffset<GfxFramebufferGLES, GLHandle> framebufferNew;
 };
 
 struct PlayerSettingsOffsets {
@@ -107,6 +119,7 @@ struct MetalSurfaceOffsets {
 extern struct AllOffsets {
 	struct ScreenManagerOffsets screenManager;
 	struct GfxDeviceOffsets gfxDevice;
+	struct GfxFramebufferGLESOffsets gfxFramebufferGLES;
 	struct PlayerSettingsOffsets playerSettings;
 	struct QualitySettingsOffsets qualitySettings;
 	struct QualitySettingOffsets qualitySetting;
@@ -117,6 +130,7 @@ extern struct AllOffsets {
 
 static struct ScreenManagerOffsets& screenMgrOffsets = _allOffsets.screenManager;
 static struct GfxDeviceOffsets& gfxDevOffsets = _allOffsets.gfxDevice;
+static struct GfxFramebufferGLESOffsets& gfxFramebufferGLESOffsets = _allOffsets.gfxFramebufferGLES;
 static struct PlayerSettingsOffsets& playerSettingsOffsets = _allOffsets.playerSettings;
 static struct QualitySettingsOffsets& qualitySettingsOffsets = _allOffsets.qualitySettings;
 static struct QualitySettingOffsets& qualitySettingOffsets = _allOffsets.qualitySetting;

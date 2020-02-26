@@ -16,6 +16,12 @@ typedef struct StringStorageDefault {
 } StringStorageDefault;
 static_assert(sizeof(StringStorageDefault) == 40, "Expected size of StringStorageDefault to be 40");
 
+typedef struct GLHandle {
+	GLuint unk1;
+	int64_t unk2;
+} GLHandle;
+static_assert(sizeof(GLHandle) == 16, "Expected size of GLHandle to be 16");
+
 typedef struct IntVector {
 	int *begin;
 	int *end;
@@ -50,7 +56,16 @@ typedef struct Matrix4x4f {
 } Matrix4x4f;
 static_assert(sizeof(Matrix4x4f) == 64, "Expected size of Matrix4x4f");
 
+typedef struct ColorRGBAf {
+	float r;
+	float g;
+	float b;
+	float a;
+} ColorRGBAf;
+
 typedef struct GfxDevice GfxDevice;
+typedef struct GfxFramebufferGLES GfxFramebufferGLES;
+typedef struct GfxRenderTargetSetup GfxRenderTargetSetup;
 typedef struct InputManager InputManager;
 typedef struct PlayerSettings PlayerSettings;
 typedef struct QualitySetting QualitySetting;
@@ -58,5 +73,6 @@ typedef struct QualitySettings QualitySettings;
 typedef struct RenderSurface RenderSurface;
 typedef struct ScreenManager ScreenManager;
 typedef struct MetalSurfaceHelper MetalSurfaceHelper;
+typedef struct ApiGLES ApiGLES;
 
 #endif /* CppTypes_h */

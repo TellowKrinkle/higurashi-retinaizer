@@ -235,10 +235,10 @@ bool SetResImmediateReplacement(ScreenManager *mgr, int width, int height, bool 
 		unityMethods.RenderTextureReleaseAll();
 	}
 	if (needsToMakeContext) {
-		if (UnityVersion >= UNITY_VERSION_TATARI_OLD && *unityMethods.gRenderer == 0x11 && screenMgrOffsets.renderSurfaceA.apply(mgr) != nullptr) {
+		if (UnityVersion >= UNITY_VERSION_TATARI_OLD && *unityMethods.gRenderer == 0x11 && screenMgrOffsets.backBufferColorSurface.apply(mgr) != nullptr) {
 			GfxDevice *gfxDevice = unityMethods.GetGfxDevice();
-			RenderSurface **rsA = &screenMgrOffsets.renderSurfaceA.apply(mgr);
-			RenderSurface **rsB = &screenMgrOffsets.renderSurfaceB.apply(mgr);
+			RenderSurface **rsA = &screenMgrOffsets.backBufferColorSurface.apply(mgr);
+			RenderSurface **rsB = &screenMgrOffsets.backBufferDepthSurface.apply(mgr);
 			gfxDevOffsets.SetBackBufferColorDepthSurface(gfxDevice, *rsA, *rsB);
 			gfxDevOffsets.DeallocRenderSurface(gfxDevice, *rsA);
 			gfxDevOffsets.DeallocRenderSurface(gfxDevice, *rsB);
@@ -403,11 +403,16 @@ void CreateAndShowWindowReplacement(ScreenManager *mgr, int width, int height, b
 	}
 }
 
-void PreBlitReplacement(ScreenManager *mgr) {
+static void PreBlitReplacementGL(ScreenManager *mgr) {
 	// TODO: There's a lot of logic that got added here in Tatarigoroshi.  Leaving it out hasn't broken the game but we should really have it here
-	if (UnityVersion >= UNITY_VERSION_ME) return;
 	int defaultFBOGL = *unityMethods.gDefaultFBOGL;
 	if (defaultFBOGL != 0) {
+		bool isThreadOwner = UnityVersion < UNITY_VERSION_TATARI_NEW || unityMethods.IsRealGfxDeviceThreadOwner();
+		GfxDevice *gfxDev = nullptr;
+		if (!isThreadOwner) {
+			gfxDev = unityMethods.GetGfxDevice();
+			gfxDevOffsets.AcquireThreadOwnership(gfxDev);
+		}
 		GLuint framebuffer1 = screenMgrOffsets.framebufferA.apply(mgr);
 		GLuint framebuffer2 = screenMgrOffsets.framebufferB.apply(mgr);
 		GLint width = screenMgrOffsets.width.apply(mgr);
@@ -441,6 +446,76 @@ void PreBlitReplacement(ScreenManager *mgr) {
 			unityMethods.GfxHelperDrawQuad.tatari(gfxDevice, nullptr, false, &rect);
 		}
 		*unityMethods.gDefaultFBOGL = defaultFBOGL;
+		if (!isThreadOwner) {
+			gfxDevOffsets.ReleaseThreadOwnership(gfxDev);
+		}
+	}
+}
+
+static void PreBlitReplacementGLES(ScreenManager *mgr) {
+	if (screenMgrOffsets.renderColorSurface.apply(mgr) == nullptr) { return; }
+	bool isThreadOwner = unityMethods.IsRealGfxDeviceThreadOwner();
+	GfxDevice *gfxDev = nullptr;
+	if (!isThreadOwner) {
+		gfxDev = unityMethods.GetGfxDevice();
+		gfxDevOffsets.AcquireThreadOwnership(gfxDev);
+	}
+	ScreenManager *otherMgr = unityMethods.GetScreenManager();
+	CGDirectDisplayID displayID = unityMethods.ScreenMgrGetDisplayID(otherMgr);
+	CGRect bounds = CGDisplayBounds(displayID);
+	NSScreen *screen = screenForID(displayID);
+	if (screen) {
+		bounds = [screen convertRectToBacking:bounds];
+	}
+	GfxFramebufferGLES *fbGLES = unityMethods.GetFramebufferGLES();
+	if (UnityVersion < UNITY_VERSION_ME) {
+		GLuint fb = gfxFramebufferGLESOffsets.framebufferOld.apply(fbGLES);
+		GLuint framebufferName = 0;
+		if (screenMgrOffsets.renderbuffer.apply(mgr) != 0) {
+			unityMethods.GfxFBGLESGetFramebufferName.tatari(&framebufferName, fbGLES, screenMgrOffsets.renderTargetSetup.apply(mgr));
+		}
+		ApiGLES *gGL = unityMethods.gGL;
+		GLuint unk1 = 0, unk2 = 0, unk3 = 0;
+		unityMethods.ApiGLESBlitFramebuffer.tatari(gGL, &fb, 1, &unk1, &framebufferName, 0, 0, screenMgrOffsets.width.apply(mgr), screenMgrOffsets.height.apply(mgr), 0, 0, (int)bounds.size.width, (int)bounds.size.height, 0);
+		unityMethods.ApiGLESBindFramebuffer.tatari(gGL, 0, &unk2);
+		unityMethods.ApiGLESBindFramebuffer.tatari(gGL, 1, &unk3);
+
+	}
+	else {
+		GLHandle fb = gfxFramebufferGLESOffsets.framebufferNew.apply(fbGLES);
+		GLHandle framebufferName = { 0, -1 };
+		if (UnityVersion < UNITY_VERSION_MINA && screenMgrOffsets.renderbuffer.apply(mgr) != 0) {
+			framebufferName = unityMethods.GfxFBGLESGetFramebufferName.me(fbGLES, screenMgrOffsets.renderTargetSetup.apply(mgr));
+		}
+		ApiGLES *gGL = unityMethods.gGL;
+		unityMethods.ApiGLESBlitFramebuffer.me(gGL, fb, 1, {0, -1}, framebufferName, 0, 0, screenMgrOffsets.width.apply(mgr), screenMgrOffsets.height.apply(mgr), 0, 0, (int)bounds.size.width, (int)bounds.size.height, 0);
+		ColorRGBAf color = { .r = 0, .g = 0, .b = 0, .a = 1 };
+		GLbitfield clearflags = GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT|GL_COLOR_BUFFER_BIT;
+		unityMethods.ApiGLESClear(gGL, clearflags, &color, false, 0, 0);
+		unityMethods.ApiGLESBindFramebuffer.me(gGL, 0, { 0, -1 });
+		unityMethods.ApiGLESBindFramebuffer.me(gGL, 0, { 0, -1 });
+	}
+	if (!isThreadOwner) {
+		gfxDevOffsets.ReleaseThreadOwnership(gfxDev);
+	}
+}
+
+void PreBlitReplacement(ScreenManager *mgr) {
+	if (UnityVersion >= UNITY_VERSION_ME) {
+		PreBlitReplacementGLES(mgr);
+	}
+	else if (UnityVersion >= UNITY_VERSION_TATARI_NEW) {
+		GfxDevice *gfxDev = unityMethods.GetRealGfxDevice();
+		int renderer = gfxDevOffsets.renderer.apply(gfxDev);
+		if (renderer == 0x8 || renderer == 0xb || renderer == 0x11) {
+			PreBlitReplacementGLES(mgr);
+		}
+		else {
+			PreBlitReplacementGL(mgr);
+		}
+	}
+	else {
+		PreBlitReplacementGL(mgr);
 	}
 }
 

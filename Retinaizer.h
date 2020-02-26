@@ -19,14 +19,16 @@ extern struct UnityMethods {
 	ScreenManager *(*GetScreenManager)(void);
 	InputManager *(*GetInputManager)(void);
 	GfxDevice *(*GetGfxDevice)(void);
+	GfxDevice *(*GetRealGfxDevice)(void);
 	QualitySettings *(*GetQualitySettings)(void);
 	PlayerSettings *(*GetPlayerSettings)(void);
-	GfxDevice *(*GetRealGfxDevice)(void);
 	MetalSurfaceHelper *(*GetCurrentMetalSurface)(void);
 	uint32_t (*GetRequestedDeviceLevel)(void);
+	GfxFramebufferGLES *(*GetFramebufferGLES)(void);
 	bool (*IsBatchMode)(void);
 	bool (*MustSwitchResolutionForFullscreenMode)(void);
 	bool (*AllowResizableWindow)(void);
+	bool (*IsRealGfxDeviceThreadOwner)(void);
 	char *(*ApplicationGetCustomPropUnityVersion)(void);
 
 	void (*SetSyncToVBL)(void *, int);
@@ -62,6 +64,20 @@ extern struct UnityMethods {
 	void (*ScreenMgrSetupDownscaledFullscreenFBO)(ScreenManager *, int, int);
 	void (*ScreenMgrRebindDefaultFramebuffer)(ScreenManager *);
 
+	union {
+		GLuint *(*tatari)(GLuint *, GfxFramebufferGLES *, GfxRenderTargetSetup *);
+		GLHandle (*me)(GfxFramebufferGLES *, GfxRenderTargetSetup *);
+	} GfxFBGLESGetFramebufferName;
+	union {
+		void (*tatari)(ApiGLES *, GLuint *, int, GLuint *, GLuint *, int, int, int, int, int, int, int, int, int);
+		void (*me    )(ApiGLES *, GLHandle, int, GLHandle, GLHandle, int, int, int, int, int, int, int, int, int);
+	} ApiGLESBlitFramebuffer;
+	union {
+		void (*tatari)(ApiGLES *, GLuint, GLuint *);
+		void (*me    )(ApiGLES *, GLuint, GLHandle);
+	} ApiGLESBindFramebuffer;
+	void (*ApiGLESClear)(ApiGLES *, GLbitfield, ColorRGBAf *, bool, float, int);
+
 	void (*Matrix4x4fSetOrtho)(Matrix4x4f *, float, float, float, float, float, float);
 
 	void (*StringStorageDefaultAssign)(StringStorageDefault *, const char *, unsigned long);
@@ -69,6 +85,7 @@ extern struct UnityMethods {
 
 	int *gDefaultFBOGL;
 	int *gRenderer;
+	ApiGLES *gGL;
 	CGSize *gMetalSurfaceRequestedSize;
 	bool *gPopUpWindow;
 	Matrix4x4f *identityMatrix;
