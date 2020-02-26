@@ -121,27 +121,24 @@ static const struct WantedFunction {
 static const struct {
 	int firstVersion;
 	int lastVersion;
-	const char *name;
+	void *target;
 } notAlwaysAvailable[] = {
-	{UNITY_VERSION_TATARI_OLD, INT_MAX, "_g_Renderer"},
-	{UNITY_VERSION_TATARI_OLD, INT_MAX, "__ZN26ScreenManagerOSXStandalone24RebindDefaultFramebufferEv"},
-	{0, UNITY_VERSION_TATARI_OLD, "__Z37MustSwitchResolutionForFullscreenModev"},
-	{0, UNITY_VERSION_TATARI_NEW, "__ZN16ScreenManagerOSX31SetFullscreenResolutionRobustlyERiS0_ib12ObjectHandleI19GraphicsContext_TagPvE"},
-	{UNITY_VERSION_TATARI_NEW, INT_MAX, "__ZN4gles18GetFramebufferGLESEv"},
-	{UNITY_VERSION_TATARI_NEW, UNITY_VERSION_HIMA, "__ZN7ApiGLES15BlitFramebufferEN2gl17FramebufferHandleENS0_15FramebufferReadES1_S1_iiiiiiiiNS0_15FramebufferMaskE"},
-	{UNITY_VERSION_TATARI_NEW, INT_MAX, "__ZN7ApiGLES15BindFramebufferEN2gl17FramebufferTargetENS0_17FramebufferHandleE"},
-	{UNITY_VERSION_TATARI_NEW, INT_MAX, "__ZN7ApiGLES15BindFramebufferEN2gl17FramebufferTargetENS0_6HandleILNS0_10ObjectTypeE9EEE"},
-	{0, UNITY_VERSION_HIMA, "_gDefaultFBOGL"},
-	{UNITY_VERSION_ME, UNITY_VERSION_TSUMI, "_g_MetalSurfaceRequestedSize"},
-	{UNITY_VERSION_ME, UNITY_VERSION_TSUMI, "__Z15RecreateSurfacev"},
-	{UNITY_VERSION_ME, INT_MAX, "__ZN7ApiGLES5ClearEjRK10ColorRGBAfbfi"},
-	{UNITY_VERSION_ME, INT_MAX, "__ZN7ApiGLES15BlitFramebufferEN2gl6HandleILNS0_10ObjectTypeE9EEENS0_15FramebufferReadES3_S3_iiiiiiiiNS0_15FramebufferMaskE"},
-	{0, UNITY_VERSION_TSUMI, "__ZN16ScreenManagerOSX14WillChangeModeERSt6vectorIiSaIiEE"},
-	{0, UNITY_VERSION_TSUMI, "__ZN14GraphicsHelper8DrawQuadER9GfxDevicePK14ChannelAssignsbff"},
-	{0, UNITY_VERSION_TSUMI, "__ZN14GraphicsHelper8DrawQuadER9GfxDevicePK14ChannelAssignsbRK5RectTIfE"},
-	{UNITY_VERSION_MINA, INT_MAX, "__Z22GetCurrentMetalSurfacev"},
-	{UNITY_VERSION_MINA, INT_MAX, "__ZN4core20StringStorageDefaultIcE6assignEPKcm"},
-	{UNITY_VERSION_MINA, INT_MAX, "__Z19free_alloc_internalPv18MemLabelIdentifier"},
+	{UNITY_VERSION_TATARI_OLD, INT_MAX, &unityMethods.gRenderer},
+	{UNITY_VERSION_TATARI_OLD, INT_MAX, &unityMethods.ScreenMgrRebindDefaultFramebuffer},
+	{0, UNITY_VERSION_TATARI_OLD, &unityMethods.MustSwitchResolutionForFullscreenMode},
+	{0, UNITY_VERSION_TATARI_NEW, &unityMethods.ScreenMgrSetFullscreenResolutionRobustly},
+	{UNITY_VERSION_TATARI_NEW, INT_MAX, &unityMethods.GetFramebufferGLES},
+	{UNITY_VERSION_TATARI_NEW, UNITY_VERSION_HIMA, &unityMethods.ApiGLESBlitFramebuffer},
+	{UNITY_VERSION_TATARI_NEW, INT_MAX, &unityMethods.ApiGLESBindFramebuffer},
+	{0, UNITY_VERSION_HIMA, &unityMethods.gDefaultFBOGL},
+	{UNITY_VERSION_ME, UNITY_VERSION_TSUMI, &unityMethods.gMetalSurfaceRequestedSize},
+	{UNITY_VERSION_ME, UNITY_VERSION_TSUMI, &unityMethods.RecreateSurface},
+	{UNITY_VERSION_ME, INT_MAX, &unityMethods.ApiGLESClear},
+	{0, UNITY_VERSION_TSUMI, &unityMethods.ScreenMgrWillChangeMode},
+	{0, UNITY_VERSION_TSUMI, &unityMethods.GfxHelperDrawQuad},
+	{UNITY_VERSION_MINA, INT_MAX, &unityMethods.GetCurrentMetalSurface},
+	{UNITY_VERSION_MINA, INT_MAX, &unityMethods.StringStorageDefaultAssign},
+	{UNITY_VERSION_MINA, INT_MAX, &unityMethods.FreeAllocInternal},
 };
 
 # pragma mark - Symbol loading
@@ -269,7 +266,7 @@ static bool verifyAllOffsetsWereFound() {
 			// Check if it's known to not be here
 			bool isExpectedMissing = false;
 			for (const auto& entry : notAlwaysAvailable) {
-				if ((UnityVersion < entry.firstVersion || UnityVersion > entry.lastVersion) && strcmp(entry.name, function.name) == 0) {
+				if ((UnityVersion < entry.firstVersion || UnityVersion > entry.lastVersion) && entry.target == function.target) {
 					isExpectedMissing = true;
 				}
 			}
