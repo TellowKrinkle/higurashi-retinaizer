@@ -9,15 +9,15 @@
 
 /// Indicates that the value will not be used by the program for the given game
 /// Set to a value that will most likely cause a crash if it does get used (since these are used as offsets, 0 will not cause a direct crash)
-static const size_t UNUSED_VALUE = 1UL << 48;
+static const uint32_t UNUSED_VALUE = 1 << 30;
 
 struct AnyMemberOffset {
-	size_t offset;
-	constexpr inline explicit AnyMemberOffset(size_t _offset): offset(_offset) {}
+	uint32_t offset;
+	constexpr inline explicit AnyMemberOffset(uint32_t _offset): offset(_offset) {}
 };
 struct AnyVtableOffset {
-	size_t offset;
-	constexpr inline explicit AnyVtableOffset(size_t _offset): offset(_offset) {}
+	uint32_t offset;
+	constexpr inline explicit AnyVtableOffset(uint32_t _offset): offset(_offset) {}
 };
 
 /// An offset from a class to an instance variable in that class
@@ -25,7 +25,7 @@ template<typename C, typename M>
 struct MemberOffset {
 	using Class = C;
 	using Member = M;
-	size_t offset = UNUSED_VALUE;
+	uint32_t offset = UNUSED_VALUE;
 
 	MemberOffset() = default;
 	constexpr inline /*implicit*/ MemberOffset(AnyMemberOffset off): offset(off.offset) {}
@@ -41,7 +41,7 @@ struct VtableOffset {
 	using Result = R;
 	using Class = C;
 	using Function = Result(*)(Class*, Args...);
-	size_t offset = UNUSED_VALUE;
+	uint32_t offset = UNUSED_VALUE;
 
 	VtableOffset() = default;
 	constexpr inline /*implicit*/ VtableOffset(AnyVtableOffset off): offset(off.offset) {}
@@ -105,7 +105,7 @@ struct QualitySettingsOffsets {
 
 struct QualitySettingOffsets {
 	MemberOffset<QualitySetting, int> vSyncCount;
-	size_t size = UNUSED_VALUE;
+	uint32_t size = UNUSED_VALUE;
 };
 
 struct InputManagerOffsets {
