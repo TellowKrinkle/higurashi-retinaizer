@@ -28,9 +28,19 @@ static void destroyStdString(StdString str) {
 	}
 }
 
+/// On macs with multiple GPUs, switching GPUs causes screen IDs to change, and NSScreen's stop matching ones returned by CG* functions.  This maps them back to matching displays again
+static CGDirectDisplayID normalizeScreen(CGDirectDisplayID screen) {
+	// From https://stackoverflow.com/a/52448558
+	CFUUIDRef uuid = CGDisplayCreateUUIDFromDisplayID(screen);
+	CGDirectDisplayID res = CGDisplayGetDisplayIDFromUUID(uuid);
+	CFRelease(uuid);
+	return res;
+}
+
 static NSScreen *screenForID(CGDirectDisplayID display) {
+	CGDirectDisplayID normalized = normalizeScreen(display);
 	for (NSScreen *screen in [NSScreen screens]) {
-		if (display == [[[screen deviceDescription] objectForKey:@"NSScreenNumber"] intValue]) {
+		if (normalized == normalizeScreen([[[screen deviceDescription] objectForKey:@"NSScreenNumber"] unsignedIntValue])) {
 			return screen;
 		}
 	}
