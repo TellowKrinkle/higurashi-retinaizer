@@ -11,6 +11,10 @@
 #include <dlfcn.h>
 #include <type_traits>
 
+#ifndef GIT_VER
+#define GIT_VER "unknown"
+#endif
+
 #pragma mark - Structs
 
 static struct MethodsToReplace {
@@ -372,6 +376,7 @@ void goRetina(void);
 }
 
 static bool verifyOkayToRun() {
+	fprintf(stderr, "libRetinaizer version " GIT_VER "\n");
 	bool unityVersionOkay = verifyAndConfigureForUnityVersion(unityVersion);
 	bool offsetsFound = verifyAllOffsetsWereFound();
 	if (!unityVersionOkay || !offsetsFound) {

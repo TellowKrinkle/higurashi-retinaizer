@@ -1,5 +1,6 @@
 CC=clang
-CFLAGS=-stdlib=libc++ -std=gnu++14 -fno-rtti -fno-objc-exceptions -fno-exceptions -mmacosx-version-min=10.7 -Os -flto=full -fobjc-arc
+GITVER=$(shell A=`git describe --tags --always 2>/dev/null` && echo -DGIT_VER=\\\"$$A\\\")
+CFLAGS=-stdlib=libc++ -std=gnu++14 -fno-rtti -fno-objc-exceptions -fno-exceptions -mmacosx-version-min=10.7 -Os -flto=full -fobjc-arc $(GITVER)
 LDFLAGS=-mmacosx-version-min=10.7 -Os -flto=full -framework Cocoa -framework OpenGL -framework Carbon
 
 libRetinaizer.dylib: Replacements.o Retinaizer.o
