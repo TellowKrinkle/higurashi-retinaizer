@@ -3,6 +3,7 @@
 #import <mach-o/nlist.h>
 #import <mach-o/fat.h>
 #import <Cocoa/Cocoa.h>
+#include <libkern/OSCacheControl.h>
 #include "Retinaizer.h"
 #include "Replacements.h"
 #include "GameOffsets.h"
@@ -276,6 +277,7 @@ static void _replaceFunction(void *oldFunction, void *newFunction) {
 	// Insert the jump instruction at the beginning of the original function
 	int64_t instruction = 0xe9 | (offset << 8);
 	*(int64_t *)oldFunction = instruction;
+	sys_icache_invalidate(oldFunction, 5);
 
 	// Re-disable write
 	mprotect((void *)pageStart, end - pageStart, PROT_READ | PROT_EXEC);
