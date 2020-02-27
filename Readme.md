@@ -21,7 +21,6 @@ If you find that your game does not retinaize, open your Unity log (`~/Library/L
 - Minagoroshi (Unity 5.6.7f1)
 
 ## Known Issues
-- If you start the game in fullscreen and then defullscreen with the green window button (rather than an in-game control), the window will be way too big
 - Game screen resolutions are used as pixel resolutions, not display-independent-point resolutions (so 1280x720 will now make a tiny window).  It seemed like less work to do things this way rather than the other way.
 
 ## Development
