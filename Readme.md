@@ -6,6 +6,14 @@ Enables retina display support for Higurashi games on macOS.  May also work on o
 You can download a pre-built copy from the releases section [here](https://github.com/tellowkrinkle/higurashi-retinaizer/releases/latest)
 
 ## Installation
+For games on Unity 2017.x and newer or if you're unsure which Unity version your game is:
+
+Run `/path/to/retinaizer HigurashiGame.app`
+
+If it prints `Try using libRetinaizer.dylib instead`, follow the directions below for a Unity 5.x game.
+
+For games on Unity 5.x:
+
 Copy `libRetinaizer.dylib` to `HigurashiGame.app/Contents/Frameworks/MonoEmbedRuntime/osx/`.  You will need a version of `Assembly-CSharp.dll` that has [this commit](https://github.com/07th-mod/higurashi-assembly/commit/0f625a5bcebdb07674531b92eb68f8d16a9bc14f) in it, which is included in the latest version of the 07th-mod package.
 
 Alternatively, you can run your game with the environment variable `DYLD_INSERT_LIBRARIES` set to `libRetinaizer.dylib`, for example `DYLD_INSERT_LIBRARIES=/path/to/libRetinaizer.dylib HigurashiGame.app/Contents/MacOS/HigurashiGame`
@@ -16,12 +24,16 @@ If you find that your game does not retinaize, open your Unity log (`~/Library/L
 Compile with `make`
 
 ## Compatible Games / Unity Versions
+libRetinaizer.dylib:
 - Onikakushi, Watanagashi (Unity 5.2.2f1)
 - Tatarigoroshi (Unity 5.3.4p1 and 5.4.0f1)
 - Himatsubushi (Unity 5.4.1f1)
 - Meakashi (Unity 5.5.3p1)
 - Tsumihoroboshi (Unity 5.5.3p3)
 - Minagoroshi (Unity 5.6.7f1)
+
+retinaizer command line tool:
+- Matsuribayashi (Unity 2017.2.5f1)
 
 ## Known Issues
 - Game screen resolutions are used as pixel resolutions, not display-independent-point resolutions (so 1280x720 will now make a tiny window).  It seemed like less work to do things this way rather than the other way.

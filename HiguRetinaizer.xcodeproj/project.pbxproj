@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1603D7FE2B83175A00A359E3 /* UnityNewRetinaizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 1603D7FD2B83175A00A359E3 /* UnityNewRetinaizer.c */; };
 		201D4792240677DC00DE5E5A /* Offsets.h in Headers */ = {isa = PBXBuildFile; fileRef = 201D4789240677DC00DE5E5A /* Offsets.h */; };
 		201D4793240677DC00DE5E5A /* Replacements.h in Headers */ = {isa = PBXBuildFile; fileRef = 201D478A240677DC00DE5E5A /* Replacements.h */; };
 		201D4794240677DC00DE5E5A /* Finally.h in Headers */ = {isa = PBXBuildFile; fileRef = 201D478B240677DC00DE5E5A /* Finally.h */; };
@@ -21,7 +22,21 @@
 		20782234240676E9007567D1 /* libSystem.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 20782233240676E9007567D1 /* libSystem.tbd */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		1603D7F42B83174B00A359E3 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		1603D7F62B83174B00A359E3 /* RetinaizerUnityNew */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = RetinaizerUnityNew; sourceTree = BUILT_PRODUCTS_DIR; };
+		1603D7FD2B83175A00A359E3 /* UnityNewRetinaizer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = UnityNewRetinaizer.c; sourceTree = SOURCE_ROOT; };
 		201D4789240677DC00DE5E5A /* Offsets.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Offsets.h; sourceTree = "<group>"; };
 		201D478A240677DC00DE5E5A /* Replacements.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Replacements.h; sourceTree = "<group>"; };
 		201D478B240677DC00DE5E5A /* Finally.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Finally.h; sourceTree = "<group>"; };
@@ -40,6 +55,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1603D7F32B83174B00A359E3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		207821F724067667007567D1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -54,10 +76,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1603D7F72B83174B00A359E3 /* RetinaizerUnityNew */ = {
+			isa = PBXGroup;
+			children = (
+				1603D7FD2B83175A00A359E3 /* UnityNewRetinaizer.c */,
+			);
+			path = RetinaizerUnityNew;
+			sourceTree = "<group>";
+		};
 		207821F024067667007567D1 = {
 			isa = PBXGroup;
 			children = (
 				2078221224067696007567D1 /* Retinaizer */,
+				1603D7F72B83174B00A359E3 /* RetinaizerUnityNew */,
 				207821FA24067667007567D1 /* Products */,
 				20782224240676AF007567D1 /* Frameworks */,
 			);
@@ -67,6 +98,7 @@
 			isa = PBXGroup;
 			children = (
 				207821F924067667007567D1 /* libRetinaizer.dylib */,
+				1603D7F62B83174B00A359E3 /* RetinaizerUnityNew */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -118,6 +150,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		1603D7F52B83174B00A359E3 /* RetinaizerUnityNew */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1603D7FC2B83174B00A359E3 /* Build configuration list for PBXNativeTarget "RetinaizerUnityNew" */;
+			buildPhases = (
+				1603D7F22B83174B00A359E3 /* Sources */,
+				1603D7F32B83174B00A359E3 /* Frameworks */,
+				1603D7F42B83174B00A359E3 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RetinaizerUnityNew;
+			productName = RetinaizerUnityNew;
+			productReference = 1603D7F62B83174B00A359E3 /* RetinaizerUnityNew */;
+			productType = "com.apple.product-type.tool";
+		};
 		207821F824067667007567D1 /* Retinaizer */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 207821FD24067667007567D1 /* Build configuration list for PBXNativeTarget "Retinaizer" */;
@@ -144,6 +193,9 @@
 				LastUpgradeCheck = 1130;
 				ORGANIZATIONNAME = "Tellow Krinkle";
 				TargetAttributes = {
+					1603D7F52B83174B00A359E3 = {
+						CreatedOnToolsVersion = 15.2;
+					};
 					207821F824067667007567D1 = {
 						CreatedOnToolsVersion = 11.3.1;
 					};
@@ -163,11 +215,20 @@
 			projectRoot = "";
 			targets = (
 				207821F824067667007567D1 /* Retinaizer */,
+				1603D7F52B83174B00A359E3 /* RetinaizerUnityNew */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1603D7F22B83174B00A359E3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1603D7FE2B83175A00A359E3 /* UnityNewRetinaizer.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		207821F624067667007567D1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -180,6 +241,36 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		1603D7FA2B83174B00A359E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.2;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		1603D7FB2B83174B00A359E3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.2;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		207821FB24067667007567D1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -325,6 +416,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1603D7FC2B83174B00A359E3 /* Build configuration list for PBXNativeTarget "RetinaizerUnityNew" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1603D7FA2B83174B00A359E3 /* Debug */,
+				1603D7FB2B83174B00A359E3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		207821F424067667007567D1 /* Build configuration list for PBXProject "HiguRetinaizer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
