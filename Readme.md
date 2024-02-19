@@ -34,6 +34,7 @@ libRetinaizer.dylib:
 
 retinaizer command line tool:
 - Matsuribayashi (Unity 2017.2.5f1)
+- Rei (Unity 2019.4.36f1)
 
 ## Known Issues
 - Game screen resolutions are used as pixel resolutions, not display-independent-point resolutions (so 1280x720 will now make a tiny window).  It seemed like less work to do things this way rather than the other way.

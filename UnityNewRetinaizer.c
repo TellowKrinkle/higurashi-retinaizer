@@ -5,6 +5,7 @@
 
 enum UnityVersion {
 	UNITY_VERSION_2017_2_5F1 = 1,
+	UNITY_VERSION_2019_4_36F1,
 };
 
 #define APP_CATEGORY "public.app-category.games"
@@ -79,6 +80,8 @@ static FILE* findGlobalGameManagers(const char* path, char (*unityVersion)[16]) 
 static enum UnityVersion lookupUnityVersion(const char* version) {
 	if (0 == strcmp("2017.2.5f1", version)) {
 		return UNITY_VERSION_2017_2_5F1;
+	} else if (0 == strcmp("2019.4.36f1", version)) {
+		return UNITY_VERSION_2019_4_36F1;
 	}
 	return 0;
 }
@@ -87,6 +90,8 @@ static int getRetinaModeOffset(enum UnityVersion version) {
 	switch (version) {
 		case UNITY_VERSION_2017_2_5F1:
 			return 22;
+		case UNITY_VERSION_2019_4_36F1:
+			return 23;
 	}
 	return 0;
 }
