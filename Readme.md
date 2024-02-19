@@ -20,6 +20,13 @@ Alternatively, you can run your game with the environment variable `DYLD_INSERT_
 
 If you find that your game does not retinaize, open your Unity log (`~/Library/Logs/Unity/Player.log`) and search it for `libRetinaizer`.  If anything comes up, it should contain a reason for not loading (or a claim that it tried to enable retina, in which case there's an issue with the library).  If nothing comes up, you messed up the loading of the dylib and should verify that you followed the above steps correctly.
 
+## Uninstallation
+For Unity 2017.x and newer:
+Follow the same steps as installation, and the patcher will disable retina if it was previously enabled
+
+For Unity 5.x:
+Delete `libRetinaizer.dylib` from the game files
+
 ## Compiling
 Compile with `make`
 
