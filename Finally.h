@@ -3,6 +3,8 @@
 #ifndef Finally_h
 #define Finally_h
 
+#include <utility>
+
 /// final_act allows you to ensure something gets run at the end of a scope
 template <class F>
 class final_act
