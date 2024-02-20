@@ -81,7 +81,7 @@
 			children = (
 				1603D7FD2B83175A00A359E3 /* UnityNewRetinaizer.c */,
 			);
-			path = RetinaizerUnityNew;
+			name = RetinaizerUnityNew;
 			sourceTree = "<group>";
 		};
 		207821F024067667007567D1 = {

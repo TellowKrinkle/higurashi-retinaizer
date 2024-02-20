@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 enum UnityVersion {
 	UNITY_VERSION_2017_2_5F1 = 1,
@@ -55,6 +56,7 @@ static FILE* tryOpenGlobalGameManagers(const char* path, char (*unityVersion)[16
 static FILE* findGlobalGameManagers(const char* path, char (*unityVersion)[16]) {
 	char buf[4096];
 	FILE* file;
+	struct stat stat_info;
 	if ((file = tryOpenGlobalGameManagers(path, unityVersion))) {
 		return file;
 	}
@@ -69,11 +71,25 @@ static FILE* findGlobalGameManagers(const char* path, char (*unityVersion)[16]) 
 		app = inner;
 	}
 	size_t len = app + 4 - path;
+	snprintf(buf, sizeof(buf), "%.*s", (int)len, path);
+	if (stat(buf, &stat_info) < 0) {
+		snprintf(buf, sizeof(buf), "Failed to stat %.*s", (int)len, path);
+		perror(buf);
+		return NULL;
+	}
+	if (!S_ISDIR(stat_info.st_mode) && !S_ISLNK(stat_info.st_mode)) {
+		fprintf(stderr, "%s isn't a directory!\n", buf);
+		return NULL;
+	}
 	snprintf(buf, sizeof(buf), "%.*s/Contents/Resources/Data/globalgamemanagers", (int)len, path);
+	if (stat(buf, &stat_info) < 0) {
+		fprintf(stderr, "Couldn't find globalgamemanagers in %s (tried %s)\n", path, buf);
+		return NULL;
+	}
 	if ((file = tryOpenGlobalGameManagers(buf, unityVersion))) {
 		return file;
 	}
-	fprintf(stderr, "Couldn't find globalgamemanagers in %s (tried %s)\n", path, buf);
+	fprintf(stderr, "Failed to open globalgamemanagers at %s\n", buf);
 	return NULL;
 }
 
