@@ -4,12 +4,12 @@ MMFLAGS=-stdlib=libc++ -std=gnu++14 -fno-rtti -fno-objc-exceptions -fno-exceptio
 CFLAGS=-mmacosx-version-min=10.7 -Os -flto=full $(GITVER)
 LDFLAGS=-mmacosx-version-min=10.7 -Os -flto=full -framework Cocoa -framework OpenGL -framework Carbon
 
-all: libRetinaizer.dylib retinaizer
+all: libRetinaizer.dylib retinaizercli
 
 libRetinaizer.dylib: Replacements.o Retinaizer.o
 	$(CC) -o $@ -shared $^ $(LDFLAGS)
 
-retinaizer: UnityNewRetinaizer.o
+retinaizercli: UnityNewRetinaizer.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 %.o: %.mm
@@ -23,4 +23,4 @@ retinaizer: UnityNewRetinaizer.o
 .PHONY: clean
 
 clean:
-	rm -f retinaizer libRetinaizer.dylib *.o *.d
+	rm -f retinaizercli libRetinaizer.dylib *.o *.d

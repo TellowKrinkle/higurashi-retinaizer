@@ -8,7 +8,7 @@ You can download a pre-built copy from the releases section [here](https://githu
 ## Installation
 For games on Unity 2017.x and newer or if you're unsure which Unity version your game is:
 
-Run `/path/to/retinaizer HigurashiGame.app`
+Run `/path/to/retinaizercli /path/to/HigurashiGame.app`.  To avoid typing the entire path, you can paste a path into the terminal by dragging the file you want from Finder over the terminal window and letting go.
 
 If it prints `Try using libRetinaizer.dylib instead`, follow the directions below for a Unity 5.x game.
 
