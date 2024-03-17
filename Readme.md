@@ -39,7 +39,7 @@ libRetinaizer.dylib:
 - Tsumihoroboshi (Unity 5.5.3p3)
 - Minagoroshi (Unity 5.6.7f1)
 
-retinaizer command line tool:
+retinaizercli command line tool:
 - Matsuribayashi (Unity 2017.2.5f1)
 - Rei (Unity 2019.4.36f1)
 
